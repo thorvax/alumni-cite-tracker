@@ -10,6 +10,7 @@ use Inertia\Response;
 class SurveyController extends Controller
 {
     private const GENERAL_KEY = 'survey.general_information';
+    private const EDUCATION_KEY = 'survey.educational_background';
 
     public function generalInformation(Request $request): Response
     {
@@ -44,8 +45,16 @@ class SurveyController extends Controller
         ]);
 
         $request->session()->put(self::GENERAL_KEY, $data);
-
+        // to_route('survey.educational');
         // TODO: redirect to step B (Educational Background) once that page exists.
         return back();
+    }
+
+
+    public function educationalBackground(Request $request): Response
+    {
+        return Inertia::render('survey/educational-background', [
+            'draft' => $request->session()->get(self::EDUCATION_KEY, []),
+        ]);
     }
 }

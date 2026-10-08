@@ -85,8 +85,12 @@ export default function SurveyLayout({
                         Step {current} of {steps.length}
                     </p>
 
-                    <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-                    <p className="mt-2 text-[13px] text-white/90">{description}</p>
+                    <h1 className="text-2xl font-bold tracking-tight">
+                        {title}
+                    </h1>
+                    <p className="mt-2 text-[13px] text-white/90">
+                        {description}
+                    </p>
 
                     <div className="mt-8 max-w-[820px]">{children}</div>
                 </div>

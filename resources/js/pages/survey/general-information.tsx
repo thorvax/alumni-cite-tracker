@@ -3,7 +3,7 @@ import type { FormEvent, PropsWithChildren } from 'react';
 import { NCR_CODE, usePsgcList, type PsgcItem } from '@/hooks/use-psgc';
 import SurveyLayout, { SURVEY_FORM_ID } from '@/layouts/survey-layout';
 import SectionHeading from '@/components/survey/section-heading';
-import Field, {inputClass} from '@/components/survey/input-field';
+import Field, { inputClass } from '@/components/survey/input-field';
 
 type GeneralInformationData = {
     first_name: string;
@@ -27,8 +27,7 @@ type GeneralInformationData = {
 
 const civilStatuses = ['Single', 'Married', 'Widowed', 'Separated', 'Divorced'];
 
-
-    function PsgcSelect({
+function PsgcSelect({
     id,
     items,
     value,
@@ -57,8 +56,8 @@ const civilStatuses = ['Single', 'Married', 'Widowed', 'Separated', 'Divorced'];
                 {loading
                     ? 'Loading…'
                     : failed
-                        ? 'Could not load. Refresh the page'
-                        : '— Select —'}
+                      ? 'Could not load. Refresh the page'
+                      : '— Select —'}
             </option>
             {items.map((item) => (
                 <option key={item.code} value={item.code}>
@@ -108,8 +107,8 @@ export default function GeneralInformation({
         isNcr
             ? `/regions/${NCR_CODE}/cities-municipalities/`
             : data.province_code
-                ? `/provinces/${data.province_code}/cities-municipalities/`
-                : null,
+              ? `/provinces/${data.province_code}/cities-municipalities/`
+              : null,
     );
 
     const barangays = usePsgcList(
@@ -183,42 +182,69 @@ export default function GeneralInformation({
                     onSubmit={submit}
                     className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2"
                 >
-                    <Field id="first_name" label="First Name" required error={errors.first_name}>
+                    <Field
+                        id="first_name"
+                        label="First Name"
+                        required
+                        error={errors.first_name}
+                    >
                         <input
                             id="first_name"
                             className={inputClass}
                             placeholder="e.g. Juan"
                             value={data.first_name}
-                            onChange={(e) => setData('first_name', e.target.value)}
+                            onChange={(e) =>
+                                setData('first_name', e.target.value)
+                            }
                         />
                     </Field>
 
-                    <Field id="middle_name" label="Middle Name" error={errors.middle_name}>
+                    <Field
+                        id="middle_name"
+                        label="Middle Name"
+                        error={errors.middle_name}
+                    >
                         <input
                             id="middle_name"
                             className={inputClass}
                             placeholder="Optional"
                             value={data.middle_name}
-                            onChange={(e) => setData('middle_name', e.target.value)}
+                            onChange={(e) =>
+                                setData('middle_name', e.target.value)
+                            }
                         />
                     </Field>
 
-                    <Field id="last_name" label="Last Name" required error={errors.last_name}>
+                    <Field
+                        id="last_name"
+                        label="Last Name"
+                        required
+                        error={errors.last_name}
+                    >
                         <input
                             id="last_name"
                             className={inputClass}
                             placeholder="e.g. dela Cruz"
                             value={data.last_name}
-                            onChange={(e) => setData('last_name', e.target.value)}
+                            onChange={(e) =>
+                                setData('last_name', e.target.value)
+                            }
                         />
                     </Field>
 
-                    <Field id="civil_status" label="Civil Status" required error={errors.civil_status}>
+                    <Field
+                        id="civil_status"
+                        label="Civil Status"
+                        required
+                        error={errors.civil_status}
+                    >
                         <select
                             id="civil_status"
                             className={inputClass}
                             value={data.civil_status}
-                            onChange={(e) => setData('civil_status', e.target.value)}
+                            onChange={(e) =>
+                                setData('civil_status', e.target.value)
+                            }
                         >
                             <option value="">— Select —</option>
                             {civilStatuses.map((s) => (
@@ -229,7 +255,12 @@ export default function GeneralInformation({
                         </select>
                     </Field>
 
-                    <Field id="sex-male" label="Sex" required error={errors.sex}>
+                    <Field
+                        id="sex-male"
+                        label="Sex"
+                        required
+                        error={errors.sex}
+                    >
                         <div className="flex items-center gap-5 pt-1">
                             {(['male', 'female'] as const).map((value) => (
                                 <label
@@ -252,19 +283,31 @@ export default function GeneralInformation({
                         </div>
                     </Field>
 
-                    <Field id="birth_date" label="Birth Date" required error={errors.birth_date}>
+                    <Field
+                        id="birth_date"
+                        label="Birth Date"
+                        required
+                        error={errors.birth_date}
+                    >
                         <input
                             id="birth_date"
                             type="date"
                             className={inputClass}
                             value={data.birth_date}
-                            onChange={(e) => setData('birth_date', e.target.value)}
+                            onChange={(e) =>
+                                setData('birth_date', e.target.value)
+                            }
                         />
                     </Field>
 
                     <SectionHeading>Address</SectionHeading>
 
-                    <Field id="region" label="Select your region" required error={errors.region}>
+                    <Field
+                        id="region"
+                        label="Select your region"
+                        required
+                        error={errors.region}
+                    >
                         <PsgcSelect
                             id="region"
                             items={regions.items}
@@ -275,7 +318,12 @@ export default function GeneralInformation({
                         />
                     </Field>
 
-                    <Field id="province" label="Province" required error={errors.province}>
+                    <Field
+                        id="province"
+                        label="Province"
+                        required
+                        error={errors.province}
+                    >
                         <PsgcSelect
                             id="province"
                             items={
@@ -291,7 +339,12 @@ export default function GeneralInformation({
                         />
                     </Field>
 
-                    <Field id="city" label="City/Town" required error={errors.city}>
+                    <Field
+                        id="city"
+                        label="City/Town"
+                        required
+                        error={errors.city}
+                    >
                         <PsgcSelect
                             id="city"
                             items={cities.items}
@@ -302,7 +355,12 @@ export default function GeneralInformation({
                         />
                     </Field>
 
-                    <Field id="barangay" label="Barangay" required error={errors.barangay}>
+                    <Field
+                        id="barangay"
+                        label="Barangay"
+                        required
+                        error={errors.barangay}
+                    >
                         <PsgcSelect
                             id="barangay"
                             items={barangays.items}
@@ -313,19 +371,30 @@ export default function GeneralInformation({
                         />
                     </Field>
 
-                    <Field id="house_no" label="House #, Building #" error={errors.house_no}>
+                    <Field
+                        id="house_no"
+                        label="House #, Building #"
+                        error={errors.house_no}
+                    >
                         <input
                             id="house_no"
                             className={inputClass}
                             placeholder="Optional"
                             value={data.house_no}
-                            onChange={(e) => setData('house_no', e.target.value)}
+                            onChange={(e) =>
+                                setData('house_no', e.target.value)
+                            }
                         />
                     </Field>
 
                     <SectionHeading>Contact</SectionHeading>
 
-                    <Field id="mobile_primary" label="Mobile Number (Primary)" required error={errors.mobile_primary}>
+                    <Field
+                        id="mobile_primary"
+                        label="Mobile Number (Primary)"
+                        required
+                        error={errors.mobile_primary}
+                    >
                         <input
                             id="mobile_primary"
                             type="tel"
@@ -333,11 +402,17 @@ export default function GeneralInformation({
                             className={inputClass}
                             placeholder="e.g. 09xx-xxx-xxxx"
                             value={data.mobile_primary}
-                            onChange={(e) => setData('mobile_primary', e.target.value)}
+                            onChange={(e) =>
+                                setData('mobile_primary', e.target.value)
+                            }
                         />
                     </Field>
 
-                    <Field id="mobile_secondary" label="Mobile Number (Secondary)" error={errors.mobile_secondary}>
+                    <Field
+                        id="mobile_secondary"
+                        label="Mobile Number (Secondary)"
+                        error={errors.mobile_secondary}
+                    >
                         <input
                             id="mobile_secondary"
                             type="tel"
@@ -345,7 +420,9 @@ export default function GeneralInformation({
                             className={inputClass}
                             placeholder="Optional"
                             value={data.mobile_secondary}
-                            onChange={(e) => setData('mobile_secondary', e.target.value)}
+                            onChange={(e) =>
+                                setData('mobile_secondary', e.target.value)
+                            }
                         />
                     </Field>
                 </form>

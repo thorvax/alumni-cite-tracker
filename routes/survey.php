@@ -8,3 +8,6 @@ Route::get('survey/general-information', [SurveyController::class, 'generalInfor
 
 Route::post('survey/general-information', [SurveyController::class, 'storeGeneralInformation'])
     ->name('survey.general.store');
+
+
+Route::get('survey/educational-background', [SurveyController::class, 'educationalBackground'])->name('survey.educational');
