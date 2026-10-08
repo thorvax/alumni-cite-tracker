@@ -29,6 +29,23 @@ const exams = [
     { value: 'csc_sub_professional', label: 'CSC Sub-Professional' },
 ];
 
+const reasons = [
+    { key: 'high_grades_course', label: 'High grades in the course or subject area(s) related to the course' },
+    { key: 'good_grades_hs', label: 'Good grades in high school' },
+    { key: 'parents_relatives', label: 'Influence of parents or relatives' },
+    { key: 'peer_influence', label: 'Peer Influence' },
+    { key: 'role_model', label: 'Inspired by a role model' },
+    { key: 'passion', label: 'Strong passion for the profession' },
+    { key: 'immediate_employment', label: 'Prospect for immediate employment' },
+    { key: 'prestige', label: 'Status or prestige of the profession' },
+    { key: 'course_availability', label: 'Availability of course offering in chosen institution' },
+    { key: 'career_advancement', label: 'Prospect of career advancement' },
+    { key: 'affordable', label: 'Affordable for the family' },
+    { key: 'compensation', label: 'Prospect of attractive compensation' },
+    { key: 'abroad', label: 'Opportunity for employment abroad' },
+    { key: 'no_choice', label: 'No particular choice or no better idea' },
+];
+
 const toggle = (list: string[], value: string) => {
     if (list.includes(value)) {
         return list.filter((item) => item !== value);
@@ -42,10 +59,13 @@ const toggle = (list: string[], value: string) => {
 
 
 
+
+
+
+
+
+
 const colsGrid2 = 'mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-5';
-
-
-
 
 export default function EducationalBackground({ draft, }: { draft: Partial<EducationalBackgroundData> }) {
 
@@ -158,6 +178,39 @@ export default function EducationalBackground({ draft, }: { draft: Partial<Educa
                     <SectionHeading>3. REASON(S) FOR TAKING THE COURSE(S) OR PURSUING DEGREE(S)</SectionHeading>
                 </div>
 
+                <fieldset className='mt-4'>
+                    <legend className="mb-2 text-[13px] font-medium text-white">
+                        You may select more than one answer. Check all that apply for each level
+                    </legend>
+
+                    {/* 
+                    Checkpoint: Thorvax(Bartolome)
+                    last modified: Thu Oct 08 2026 18:34:45 GMT+0800 (Philippine Standard Time)
+                    
+                    CONTINUE 
+                    
+                    */}
+                    {/* 
+                    <div className='space-y-2.5'>
+
+                        <table className='grid grid-cols-2 '>
+
+                            {
+                                reasons.map((e) => (
+                                    <tr>
+                                        <td>
+                                            {e.label}
+                                        </td>
+                                    </tr>
+
+                                ))
+                            }
+
+                        </table>
+                    </div> */}
+
+                    <p>{Date()}</p>
+                </fieldset>
             </SurveyLayout>
         </>
     );
