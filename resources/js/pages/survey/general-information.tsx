@@ -2,6 +2,8 @@ import { Head, useForm } from '@inertiajs/react';
 import type { FormEvent, PropsWithChildren } from 'react';
 import { NCR_CODE, usePsgcList, type PsgcItem } from '@/hooks/use-psgc';
 import SurveyLayout, { SURVEY_FORM_ID } from '@/layouts/survey-layout';
+import SectionHeading from '@/components/survey/section-heading';
+import Field, {inputClass} from '@/components/survey/input-field';
 
 type GeneralInformationData = {
     first_name: string;
@@ -25,45 +27,8 @@ type GeneralInformationData = {
 
 const civilStatuses = ['Single', 'Married', 'Widowed', 'Separated', 'Divorced'];
 
-const inputClass =
-    'h-[38px] w-full rounded-md border border-transparent bg-[#1a1a1a] px-3.5 text-sm text-white placeholder:text-white/35 focus:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/25 [color-scheme:dark] disabled:cursor-not-allowed disabled:opacity-50';
 
-function Field({
-    id,
-    label,
-    required,
-    error,
-    children,
-}: PropsWithChildren<{
-    id: string;
-    label: string;
-    required?: boolean;
-    error?: string;
-}>) {
-    return (
-        <div>
-            <label
-                htmlFor={id}
-                className="mb-2 block text-[13px] font-medium text-white"
-            >
-                {label}
-                {required && ' *'}
-            </label>
-            {children}
-            {error && <p className="mt-1.5 text-xs text-red-400">{error}</p>}
-        </div>
-    );
-}
-
-function SectionHeading({ children }: PropsWithChildren) {
-    return (
-        <h2 className="col-span-full mt-4 text-[13px] font-semibold tracking-wide text-white uppercase">
-            {children}
-        </h2>
-    );
-}
-
-function PsgcSelect({
+    function PsgcSelect({
     id,
     items,
     value,
@@ -92,8 +57,8 @@ function PsgcSelect({
                 {loading
                     ? 'Loading…'
                     : failed
-                      ? 'Could not load. Refresh the page'
-                      : '— Select —'}
+                        ? 'Could not load. Refresh the page'
+                        : '— Select —'}
             </option>
             {items.map((item) => (
                 <option key={item.code} value={item.code}>
@@ -143,8 +108,8 @@ export default function GeneralInformation({
         isNcr
             ? `/regions/${NCR_CODE}/cities-municipalities/`
             : data.province_code
-              ? `/provinces/${data.province_code}/cities-municipalities/`
-              : null,
+                ? `/provinces/${data.province_code}/cities-municipalities/`
+                : null,
     );
 
     const barangays = usePsgcList(

@@ -2,19 +2,21 @@ import { Head, Link } from '@inertiajs/react';
 import { ArrowRight, House, Info, MessageSquare } from 'lucide-react';
 import { CiteLogo, CollegeCredit } from '@/components/cite-logo';
 import { cn } from '@/lib/utils';
+import { NavMain } from '@/components/nav-main';
 
 // About and Contact pages don't exist yet; point these at real routes once they do.
 const navItems = [
-    { label: 'Home', href: '/', icon: House, active: true },
-    { label: 'About', href: '#about', icon: Info, active: false },
-    { label: 'Contact', href: '#contact', icon: MessageSquare, active: false },
+    { title: 'Home', label: 'Home', href: '/', icon: House, active: true },
+    { title: 'About', label: 'About', href: '#about', icon: Info, active: false },
+    { title: 'Contact', label: 'Contact', href: '#contact', icon: MessageSquare, active: false },
 ];
+
+
 
 export default function Welcome() {
     return (
         <>
             <Head title="CITE Tracker" />
-
             <div className="flex min-h-screen bg-[#2b2b2b] text-white">
                 {/* Sidebar (desktop) */}
                 <aside className="hidden w-[230px] shrink-0 flex-col justify-between py-7 md:flex">
