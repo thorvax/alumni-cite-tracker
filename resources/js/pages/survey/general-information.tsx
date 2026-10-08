@@ -1,5 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import type { FormEvent, PropsWithChildren } from 'react';
+import { NCR_CODE, usePsgcList, type PsgcItem } from '@/hooks/use-psgc';
 import SurveyLayout, { SURVEY_FORM_ID } from '@/layouts/survey-layout';
 
 type GeneralInformationData = {
@@ -13,6 +14,10 @@ type GeneralInformationData = {
     province: string;
     city: string;
     barangay: string;
+    region_code: string;
+    province_code: string;
+    city_code: string;
+    barangay_code: string;
     house_no: string;
     mobile_primary: string;
     mobile_secondary: string;
@@ -20,28 +25,8 @@ type GeneralInformationData = {
 
 const civilStatuses = ['Single', 'Married', 'Widowed', 'Separated', 'Divorced'];
 
-const regions = [
-    'NCR - National Capital Region',
-    'CAR - Cordillera Administrative Region',
-    'Region I - Ilocos Region',
-    'Region II - Cagayan Valley',
-    'Region III - Central Luzon',
-    'Region IV-A - CALABARZON',
-    'MIMAROPA Region',
-    'Region V - Bicol Region',
-    'Region VI - Western Visayas',
-    'Region VII - Central Visayas',
-    'Region VIII - Eastern Visayas',
-    'Region IX - Zamboanga Peninsula',
-    'Region X - Northern Mindanao',
-    'Region XI - Davao Region',
-    'Region XII - SOCCSKSARGEN',
-    'Region XIII - Caraga',
-    'BARMM - Bangsamoro Autonomous Region',
-];
-
 const inputClass =
-    'h-[38px] w-full rounded-md border border-transparent bg-[#1a1a1a] px-3.5 text-sm text-white placeholder:text-white/35 focus:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/25 [color-scheme:dark]';
+    'h-[38px] w-full rounded-md border border-transparent bg-[#1a1a1a] px-3.5 text-sm text-white placeholder:text-white/35 focus:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/25 [color-scheme:dark] disabled:cursor-not-allowed disabled:opacity-50';
 
 function Field({
     id,
@@ -78,6 +63,47 @@ function SectionHeading({ children }: PropsWithChildren) {
     );
 }
 
+function PsgcSelect({
+    id,
+    items,
+    value,
+    loading,
+    failed,
+    disabled,
+    onChange,
+}: {
+    id: string;
+    items: PsgcItem[];
+    value: string;
+    loading?: boolean;
+    failed?: boolean;
+    disabled?: boolean;
+    onChange: (code: string) => void;
+}) {
+    return (
+        <select
+            id={id}
+            className={inputClass}
+            value={value}
+            disabled={disabled || loading || failed}
+            onChange={(e) => onChange(e.target.value)}
+        >
+            <option value="">
+                {loading
+                    ? 'Loading…'
+                    : failed
+                      ? 'Could not load. Refresh the page'
+                      : '— Select —'}
+            </option>
+            {items.map((item) => (
+                <option key={item.code} value={item.code}>
+                    {item.name}
+                </option>
+            ))}
+        </select>
+    );
+}
+
 export default function GeneralInformation({
     draft,
 }: {
@@ -95,10 +121,81 @@ export default function GeneralInformation({
             province: draft.province ?? '',
             city: draft.city ?? '',
             barangay: draft.barangay ?? '',
+            region_code: draft.region_code ?? '',
+            province_code: draft.province_code ?? '',
+            city_code: draft.city_code ?? '',
+            barangay_code: draft.barangay_code ?? '',
             house_no: draft.house_no ?? '',
             mobile_primary: draft.mobile_primary ?? '',
             mobile_secondary: draft.mobile_secondary ?? '',
         });
+
+    const regions = usePsgcList('/regions/');
+    const isNcr = data.region_code === NCR_CODE;
+
+    const provinces = usePsgcList(
+        data.region_code && !isNcr
+            ? `/regions/${data.region_code}/provinces/`
+            : null,
+    );
+
+    const cities = usePsgcList(
+        isNcr
+            ? `/regions/${NCR_CODE}/cities-municipalities/`
+            : data.province_code
+              ? `/provinces/${data.province_code}/cities-municipalities/`
+              : null,
+    );
+
+    const barangays = usePsgcList(
+        data.city_code
+            ? `/cities-municipalities/${data.city_code}/barangays/`
+            : null,
+    );
+
+    const nameOf = (items: PsgcItem[], code: string) =>
+        items.find((item) => item.code === code)?.name ?? '';
+
+    // Changing a level clears everything below it.
+    const selectRegion = (code: string) =>
+        setData((prev) => ({
+            ...prev,
+            region_code: code,
+            region: nameOf(regions.items, code),
+            province_code: '',
+            province: code === NCR_CODE ? 'Metro Manila' : '',
+            city_code: '',
+            city: '',
+            barangay_code: '',
+            barangay: '',
+        }));
+
+    const selectProvince = (code: string) =>
+        setData((prev) => ({
+            ...prev,
+            province_code: code,
+            province: nameOf(provinces.items, code),
+            city_code: '',
+            city: '',
+            barangay_code: '',
+            barangay: '',
+        }));
+
+    const selectCity = (code: string) =>
+        setData((prev) => ({
+            ...prev,
+            city_code: code,
+            city: nameOf(cities.items, code),
+            barangay_code: '',
+            barangay: '',
+        }));
+
+    const selectBarangay = (code: string) =>
+        setData((prev) => ({
+            ...prev,
+            barangay_code: code,
+            barangay: nameOf(barangays.items, code),
+        }));
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
@@ -203,48 +300,51 @@ export default function GeneralInformation({
                     <SectionHeading>Address</SectionHeading>
 
                     <Field id="region" label="Select your region" required error={errors.region}>
-                        <select
+                        <PsgcSelect
                             id="region"
-                            className={inputClass}
-                            value={data.region}
-                            onChange={(e) => setData('region', e.target.value)}
-                        >
-                            <option value="">— Select —</option>
-                            {regions.map((r) => (
-                                <option key={r} value={r}>
-                                    {r}
-                                </option>
-                            ))}
-                        </select>
+                            items={regions.items}
+                            value={data.region_code}
+                            loading={regions.loading}
+                            failed={regions.failed}
+                            onChange={selectRegion}
+                        />
                     </Field>
 
                     <Field id="province" label="Province" required error={errors.province}>
-                        <input
+                        <PsgcSelect
                             id="province"
-                            className={inputClass}
-                            placeholder="e.g. Pangasinan"
-                            value={data.province}
-                            onChange={(e) => setData('province', e.target.value)}
+                            items={
+                                isNcr
+                                    ? [{ code: 'ncr', name: 'Metro Manila' }]
+                                    : provinces.items
+                            }
+                            value={isNcr ? 'ncr' : data.province_code}
+                            loading={provinces.loading}
+                            failed={provinces.failed}
+                            disabled={isNcr}
+                            onChange={selectProvince}
                         />
                     </Field>
 
                     <Field id="city" label="City/Town" required error={errors.city}>
-                        <input
+                        <PsgcSelect
                             id="city"
-                            className={inputClass}
-                            placeholder="e.g. Urdaneta City"
-                            value={data.city}
-                            onChange={(e) => setData('city', e.target.value)}
+                            items={cities.items}
+                            value={data.city_code}
+                            loading={cities.loading}
+                            failed={cities.failed}
+                            onChange={selectCity}
                         />
                     </Field>
 
                     <Field id="barangay" label="Barangay" required error={errors.barangay}>
-                        <input
+                        <PsgcSelect
                             id="barangay"
-                            className={inputClass}
-                            placeholder="e.g. Nancamaliran"
-                            value={data.barangay}
-                            onChange={(e) => setData('barangay', e.target.value)}
+                            items={barangays.items}
+                            value={data.barangay_code}
+                            loading={barangays.loading}
+                            failed={barangays.failed}
+                            onChange={selectBarangay}
                         />
                     </Field>
 
