@@ -8,10 +8,7 @@ export const NCR_CODE = '130000000';
 
 export type PsgcItem = { code: string; name: string };
 
-async function getList(
-    path: string,
-    signal: AbortSignal,
-): Promise<PsgcItem[]> {
+async function getList(path: string, signal: AbortSignal): Promise<PsgcItem[]> {
     const res = await fetch(`${BASE}${path}`, { signal });
 
     if (!res.ok) {

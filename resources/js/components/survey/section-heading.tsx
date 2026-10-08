@@ -1,6 +1,5 @@
-import React from 'react'
+import React from 'react';
 import type { FormEvent, PropsWithChildren } from 'react';
-
 
 export default function SectionHeading({ children }: PropsWithChildren) {
     return (
@@ -9,4 +8,3 @@ export default function SectionHeading({ children }: PropsWithChildren) {
         </h2>
     );
 }
-

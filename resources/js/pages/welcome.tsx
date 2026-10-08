@@ -7,11 +7,21 @@ import { NavMain } from '@/components/nav-main';
 // About and Contact pages don't exist yet; point these at real routes once they do.
 const navItems = [
     { title: 'Home', label: 'Home', href: '/', icon: House, active: true },
-    { title: 'About', label: 'About', href: '#about', icon: Info, active: false },
-    { title: 'Contact', label: 'Contact', href: '#contact', icon: MessageSquare, active: false },
+    {
+        title: 'About',
+        label: 'About',
+        href: '#about',
+        icon: Info,
+        active: false,
+    },
+    {
+        title: 'Contact',
+        label: 'Contact',
+        href: '#contact',
+        icon: MessageSquare,
+        active: false,
+    },
 ];
-
-
 
 export default function Welcome() {
     return (
@@ -26,22 +36,26 @@ export default function Welcome() {
                         </div>
 
                         <nav className="mt-8 flex flex-col gap-1 px-6">
-                            {navItems.map(({ label, href, icon: Icon, active }) => (
-                                <a
-                                    key={label}
-                                    href={href}
-                                    aria-current={active ? 'page' : undefined}
-                                    className={cn(
-                                        'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm',
-                                        active
-                                            ? 'bg-neutral-800  font-medium text-white'
-                                            : 'text-gray-400 hover:text-gray-200',
-                                    )}
-                                >
-                                    <Icon className="size-4" />
-                                    {label}
-                                </a>
-                            ))}
+                            {navItems.map(
+                                ({ label, href, icon: Icon, active }) => (
+                                    <a
+                                        key={label}
+                                        href={href}
+                                        aria-current={
+                                            active ? 'page' : undefined
+                                        }
+                                        className={cn(
+                                            'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm',
+                                            active
+                                                ? 'bg-neutral-800 font-medium text-white'
+                                                : 'text-gray-400 hover:text-gray-200',
+                                        )}
+                                    >
+                                        <Icon className="size-4" />
+                                        {label}
+                                    </a>
+                                ),
+                            )}
                         </nav>
                     </div>
 
