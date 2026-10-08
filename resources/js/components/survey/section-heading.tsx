@@ -1,5 +1,5 @@
 import React from 'react';
-import type { FormEvent, PropsWithChildren } from 'react';
+import type { PropsWithChildren } from 'react';
 
 export default function SectionHeading({ children }: PropsWithChildren) {
     return (

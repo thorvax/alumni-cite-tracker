@@ -2,7 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { ArrowRight, House, Info, MessageSquare } from 'lucide-react';
 import { CiteLogo, CollegeCredit } from '@/components/cite-logo';
 import { cn } from '@/lib/utils';
-import { NavMain } from '@/components/nav-main';
+// import { NavMain } from '@/components/nav-main';
 
 // About and Contact pages don't exist yet; point these at real routes once they do.
 const navItems = [

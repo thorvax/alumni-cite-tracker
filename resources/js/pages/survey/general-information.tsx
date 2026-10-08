@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import type { FormEvent, PropsWithChildren } from 'react';
+import type { FormEvent } from 'react';
 import { NCR_CODE, usePsgcList, type PsgcItem } from '@/hooks/use-psgc';
 import SurveyLayout, { SURVEY_FORM_ID } from '@/layouts/survey-layout';
 import SectionHeading from '@/components/survey/section-heading';
