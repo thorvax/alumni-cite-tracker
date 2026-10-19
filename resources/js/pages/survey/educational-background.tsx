@@ -10,6 +10,7 @@ type EducationalBackgroundData = {
     exams: string[];
     date_taken: string;
     rating: string;
+    reasons: string[];
 };
 
 const courses = [
@@ -30,28 +31,30 @@ const exams = [
     { value: 'csc_sub_professional', label: 'CSC Sub-Professional' },
 ];
 
-// const reasons = [
-//     {
-//         key: 'high_grades_course',
-//         label: 'High grades in the course or subject area(s) related to the course',
-//     },
-//     { key: 'good_grades_hs', label: 'Good grades in high school' },
-//     { key: 'parents_relatives', label: 'Influence of parents or relatives' },
-//     { key: 'peer_influence', label: 'Peer Influence' },
-//     { key: 'role_model', label: 'Inspired by a role model' },
-//     { key: 'passion', label: 'Strong passion for the profession' },
-//     { key: 'immediate_employment', label: 'Prospect for immediate employment' },
-//     { key: 'prestige', label: 'Status or prestige of the profession' },
-//     {
-//         key: 'course_availability',
-//         label: 'Availability of course offering in chosen institution',
-//     },
-//     { key: 'career_advancement', label: 'Prospect of career advancement' },
-//     { key: 'affordable', label: 'Affordable for the family' },
-//     { key: 'compensation', label: 'Prospect of attractive compensation' },
-//     { key: 'abroad', label: 'Opportunity for employment abroad' },
-//     { key: 'no_choice', label: 'No particular choice or no better idea' },
-// ];
+const reasons = [
+    {
+        key: 'high_grades_course',
+        label: 'High grades in the course or subject area(s) related to the course',
+    },
+    { key: 'good_grades_hs', label: 'Good grades in high school' },
+    { key: 'parents_relatives', label: 'Influence of parents or relatives' },
+    { key: 'peer_influence', label: 'Peer Influence' },
+    { key: 'role_model', label: 'Inspired by a role model' },
+    { key: 'passion', label: 'Strong passion for the profession' },
+    { key: 'immediate_employment', label: 'Prospect for immediate employment' },
+    { key: 'prestige', label: 'Status or prestige of the profession' },
+    {
+        key: 'course_availability',
+        label: 'Availability of course offering in chosen institution',
+    },
+    { key: 'career_advancement', label: 'Prospect of career advancement' },
+    { key: 'affordable', label: 'Affordable for the family' },
+    { key: 'compensation', label: 'Prospect of attractive compensation' },
+    { key: 'abroad', label: 'Opportunity for employment abroad' },
+    { key: 'no_choice', label: 'No particular choice or no better idea' },
+];
+
+
 
 const toggle = (list: string[], value: string) => {
     if (list.includes(value)) {
@@ -74,6 +77,7 @@ export default function EducationalBackground({
         exams: draft.exams ?? [],
         date_taken: draft.date_taken ?? 'null',
         rating: draft.rating ?? '0.0%',
+        reasons: draft.reasons ?? [],
     });
 
     return (
@@ -219,16 +223,40 @@ export default function EducationalBackground({
                     CONTINUE 
                     
                     */}
-                    {/*
+
+
+                        {/* 
+                            Next step is ayusin yung border style and ayusin din yung 
+                            input checkbox create two checkbox and let them select multiple checboxes
+                            also make the reason as the key and the value is the two checknox
+                        */}
                     <div className='space-y-2.5'>
 
-                        <table className='grid grid-cols-2 '>
+                        <table className='grid grid-cols-2 border-solid border-2'>
 
                             {
                                 reasons.map((e) => (
-                                    <tr>
-                                        <td>
-                                            {e.label}
+                                    <tr className='flex border-solid border-2'>
+                                        <td className='flex'>
+                                            <label
+                                                key={e.label}
+                                                className="flex cursor-pointer items-center gap-2.5 text-sm text-white/80"
+                                            >
+                                                {e.label}
+
+                                                <input
+                                                    value={e.key}
+                                                    type="checkbox"
+                                                    checked={data.reasons.includes(e.key)}
+                                                    onChange={() => {
+                                                        setData(
+                                                            'reasons',
+                                                            toggle(data.reasons, e.key),
+                                                        );
+                                                    }}
+                                                    className='flex'                                                    
+                                                ></input>
+                                            </label>
                                         </td>
                                     </tr>
 
@@ -236,7 +264,7 @@ export default function EducationalBackground({
                             }
 
                         </table>
-                    </div> */}
+                    </div>
 
                     <p>{Date()}</p>
                 </fieldset>
