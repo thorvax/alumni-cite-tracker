@@ -216,9 +216,7 @@ export default function EducationalBackground({
                         apply for each level.
                     </legend>
 
-                    <div
-                        className="grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-white/30 bg-white/25 md:grid-cols-2"
-                    >
+                    <div className="grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-white/30 bg-white/25 md:grid-cols-2">
                         {reasons.map((reason) => (
                             <div
                                 key={reason.key}
@@ -228,9 +226,7 @@ export default function EducationalBackground({
                                     {reason.label}
                                 </span>
 
-                                <div
-                                    className="flex shrink-0 gap-3 [&>label]:flex [&>label]:cursor-pointer [&>label]:flex-col [&>label]:items-center [&>label]:gap-1 [&>label]:text-[10px] [&>label]:text-white/70"
-                                >
+                                <div className="flex shrink-0 gap-3 [&>label]:flex [&>label]:cursor-pointer [&>label]:flex-col [&>label]:items-center [&>label]:gap-1 [&>label]:text-[10px] [&>label]:text-white/70">
                                     <label className="">
                                         <input
                                             type="checkbox"
