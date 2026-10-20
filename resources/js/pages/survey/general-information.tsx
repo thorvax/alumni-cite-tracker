@@ -56,8 +56,8 @@ function PsgcSelect({
                 {loading
                     ? 'Loading…'
                     : failed
-                        ? 'Could not load. Refresh the page'
-                        : '— Select —'}
+                      ? 'Could not load. Refresh the page'
+                      : '— Select —'}
             </option>
             {items.map((item) => (
                 <option key={item.code} value={item.code}>
@@ -107,8 +107,8 @@ export default function GeneralInformation({
         isNcr
             ? `/regions/${NCR_CODE}/cities-municipalities/`
             : data.province_code
-                ? `/provinces/${data.province_code}/cities-municipalities/`
-                : null,
+              ? `/provinces/${data.province_code}/cities-municipalities/`
+              : null,
     );
 
     const barangays = usePsgcList(
@@ -175,7 +175,7 @@ export default function GeneralInformation({
                 title="A. General Information"
                 description="Please provide your personal details."
                 backHref="/"
-                nextHref='/survey/educational-background'
+                nextHref="/survey/educational-background"
                 processing={processing}
             >
                 <form

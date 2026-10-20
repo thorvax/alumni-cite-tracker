@@ -55,8 +55,6 @@ const reasons = [
     { key: 'no_choice', label: 'No particular choice or no better idea' },
 ];
 
-
-
 const toggle = (list: string[], value: string) => {
     if (list.includes(value)) {
         return list.filter((item) => item !== value);
@@ -205,7 +203,6 @@ export default function EducationalBackground({
                 </div>
                 {/* <p>{JSON.stringify(data)}</p> */}
 
-
                 <div className="my-5">
                     <SectionHeading>
                         3. REASON(S) FOR TAKING THE COURSE(S) OR PURSUING
@@ -215,49 +212,40 @@ export default function EducationalBackground({
 
                 <fieldset className="mt-4">
                     <legend className="mb-3 text-[13px] text-white">
-                        You may select more than one answer. Check all that apply for each level.
+                        You may select more than one answer. Check all that
+                        apply for each level.
                     </legend>
 
-                    <div className="    
-                                grid 
-                                grid-cols-1 
-                                gap-px 
-                                overflow-hidden 
-                                rounded-sm 
-                                border 
-                                border-white/30 
-                                bg-white/25 
-                                
-                                md:grid-cols-2
-                                
-                                ">
+                    <div
+                        className="grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-white/30 bg-white/25 md:grid-cols-2"
+                    >
                         {reasons.map((reason) => (
                             <div
                                 key={reason.key}
                                 className="flex items-center justify-between gap-3 bg-[#2b2b2b] px-3 py-2.5"
                             >
-                                <span className="text-[13px] text-white/75">{reason.label}</span>
+                                <span className="text-[13px] text-white/75">
+                                    {reason.label}
+                                </span>
 
-                                <div className="
-                                                flex 
-                                                shrink-0 
-                                                gap-3
-                                                
-                                                [&>label]:flex 
-                                                [&>label]:cursor-pointer 
-                                                [&>label]:flex-col 
-                                                [&>label]:items-center 
-                                                [&>label]:gap-1 
-                                                [&>label]:text-[10px] 
-                                                [&>label]:text-white/70
-                                ">
+                                <div
+                                    className="flex shrink-0 gap-3 [&>label]:flex [&>label]:cursor-pointer [&>label]:flex-col [&>label]:items-center [&>label]:gap-1 [&>label]:text-[10px] [&>label]:text-white/70"
+                                >
                                     <label className="">
                                         <input
                                             type="checkbox"
                                             aria-label={`${reason.label} (undergraduate)`}
-                                            checked={data.reasons_ug.includes(reason.key)}
+                                            checked={data.reasons_ug.includes(
+                                                reason.key,
+                                            )}
                                             onChange={() =>
-                                                setData('reasons_ug', toggle(data.reasons_ug, reason.key))
+                                                setData(
+                                                    'reasons_ug',
+                                                    toggle(
+                                                        data.reasons_ug,
+                                                        reason.key,
+                                                    ),
+                                                )
                                             }
                                         />
                                         UG
@@ -267,9 +255,17 @@ export default function EducationalBackground({
                                         <input
                                             type="checkbox"
                                             aria-label={`${reason.label} (graduate)`}
-                                            checked={data.reasons_grad.includes(reason.key)}
+                                            checked={data.reasons_grad.includes(
+                                                reason.key,
+                                            )}
                                             onChange={() =>
-                                                setData('reasons_grad', toggle(data.reasons_grad, reason.key))
+                                                setData(
+                                                    'reasons_grad',
+                                                    toggle(
+                                                        data.reasons_grad,
+                                                        reason.key,
+                                                    ),
+                                                )
                                             }
                                         />
                                         Grad
@@ -280,24 +276,8 @@ export default function EducationalBackground({
                     </div>
                     <button
                         type="button"
-                        className='
-                            rounded-md 
-                            bg-[#f0f0f0]
-                            
-                            px-3
-                            py-2 
-                            mt-2
+                        className="mt-2 rounded-md bg-[#f0f0f0] px-3 py-2 text-sm font-semibold text-black transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none disabled:opacity-60"
 
-                            text-sm 
-                            font-semibold 
-                            text-black 
-                            transition-colors 
-                            hover:bg-white 
-                            focus-visible:ring-2 
-                            focus-visible:ring-white/60 
-                            focus-visible:outline-none 
-                            disabled:opacity-60'
-                                
                         onClick={() => {
                             setData('reasons_ug', []);
                             setData('reasons_grad', []);
