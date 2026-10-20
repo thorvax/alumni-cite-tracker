@@ -89,7 +89,7 @@ export default function EducationalBackground({
                 title="B. Educational Background"
                 backHref="/survey/general-information"
                 description={''}
-                nextHref='/'
+                nextHref="/"
             >
                 <SectionHeading>1. EDUCATIONAL ATTAINMENT</SectionHeading>
                 <div className={colsGrid2}>
