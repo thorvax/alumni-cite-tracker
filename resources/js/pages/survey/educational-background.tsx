@@ -10,7 +10,8 @@ type EducationalBackgroundData = {
     exams: string[];
     date_taken: string;
     rating: string;
-    reasons: string[];
+    reasons_ug: string[];
+    reasons_grad: string[];
 };
 
 const courses = [
@@ -77,7 +78,8 @@ export default function EducationalBackground({
         exams: draft.exams ?? [],
         date_taken: draft.date_taken ?? 'null',
         rating: draft.rating ?? '0.0%',
-        reasons: draft.reasons ?? [],
+        reasons_ug: draft.reasons_ug ?? [],
+        reasons_grad: draft.reasons_grad ?? [],
     });
 
     return (
@@ -173,7 +175,6 @@ export default function EducationalBackground({
                     <Field
                         id="date_taken"
                         label="2.2 Date Taken"
-                        required
                         error={errors.date_taken}
                     >
                         <input
@@ -193,7 +194,7 @@ export default function EducationalBackground({
                         error={errors.rating}
                     >
                         <input
-                            type="text"
+                            type="number"
                             id="rating"
                             className={inputClass}
                             value={data.rating}
@@ -202,7 +203,9 @@ export default function EducationalBackground({
                         />
                     </Field>
                 </div>
-                <p>{JSON.stringify(data)}</p>
+                {/* <p>{JSON.stringify(data)}</p> */}
+
+
                 <div className="my-5">
                     <SectionHeading>
                         3. REASON(S) FOR TAKING THE COURSE(S) OR PURSUING
@@ -211,62 +214,97 @@ export default function EducationalBackground({
                 </div>
 
                 <fieldset className="mt-4">
-                    <legend className="mb-2 text-[13px] font-medium text-white">
-                        You may select more than one answer. Check all that
-                        apply for each level
+                    <legend className="mb-3 text-[13px] text-white">
+                        You may select more than one answer. Check all that apply for each level.
                     </legend>
 
-                    {/*
-                    Checkpoint: Thorvax(Bartolome)
-                    last modified: Thu Oct 08 2026 18:34:45 GMT+0800 (Philippine Standard Time)
-                    
-                    CONTINUE 
-                    
-                    */}
+                    <div className="    
+                                grid 
+                                grid-cols-1 
+                                gap-px 
+                                overflow-hidden 
+                                rounded-sm 
+                                border 
+                                border-white/30 
+                                bg-white/25 
+                                
+                                md:grid-cols-2
+                                
+                                ">
+                        {reasons.map((reason) => (
+                            <div
+                                key={reason.key}
+                                className="flex items-center justify-between gap-3 bg-[#2b2b2b] px-3 py-2.5"
+                            >
+                                <span className="text-[13px] text-white/75">{reason.label}</span>
 
+                                <div className="
+                                                flex 
+                                                shrink-0 
+                                                gap-3
+                                                
+                                                [&>label]:flex 
+                                                [&>label]:cursor-pointer 
+                                                [&>label]:flex-col 
+                                                [&>label]:items-center 
+                                                [&>label]:gap-1 
+                                                [&>label]:text-[10px] 
+                                                [&>label]:text-white/70
+                                ">
+                                    <label className="">
+                                        <input
+                                            type="checkbox"
+                                            aria-label={`${reason.label} (undergraduate)`}
+                                            checked={data.reasons_ug.includes(reason.key)}
+                                            onChange={() =>
+                                                setData('reasons_ug', toggle(data.reasons_ug, reason.key))
+                                            }
+                                        />
+                                        UG
+                                    </label>
 
-                        {/* 
-                            Next step is ayusin yung border style and ayusin din yung 
-                            input checkbox create two checkbox and let them select multiple checboxes
-                            also make the reason as the key and the value is the two checknox
-                        */}
-                    <div className='space-y-2.5'>
-
-                        <table className='grid grid-cols-2 border-solid border-2'>
-
-                            {
-                                reasons.map((e) => (
-                                    <tr className='flex border-solid border-2'>
-                                        <td className='flex'>
-                                            <label
-                                                key={e.label}
-                                                className="flex cursor-pointer items-center gap-2.5 text-sm text-white/80"
-                                            >
-                                                {e.label}
-
-                                                <input
-                                                    value={e.key}
-                                                    type="checkbox"
-                                                    checked={data.reasons.includes(e.key)}
-                                                    onChange={() => {
-                                                        setData(
-                                                            'reasons',
-                                                            toggle(data.reasons, e.key),
-                                                        );
-                                                    }}
-                                                    className='flex'                                                    
-                                                ></input>
-                                            </label>
-                                        </td>
-                                    </tr>
-
-                                ))
-                            }
-
-                        </table>
+                                    <label className="">
+                                        <input
+                                            type="checkbox"
+                                            aria-label={`${reason.label} (graduate)`}
+                                            checked={data.reasons_grad.includes(reason.key)}
+                                            onChange={() =>
+                                                setData('reasons_grad', toggle(data.reasons_grad, reason.key))
+                                            }
+                                        />
+                                        Grad
+                                    </label>
+                                </div>
+                            </div>
+                        ))}
                     </div>
+                    <button
+                        type="button"
+                        className='
+                            rounded-md 
+                            bg-[#f0f0f0]
+                            
+                            px-3
+                            py-2 
+                            mt-2
 
-                    <p>{Date()}</p>
+                            text-sm 
+                            font-semibold 
+                            text-black 
+                            transition-colors 
+                            hover:bg-white 
+                            focus-visible:ring-2 
+                            focus-visible:ring-white/60 
+                            focus-visible:outline-none 
+                            disabled:opacity-60'
+                                
+                        onClick={() => {
+                            setData('reasons_ug', []);
+                            setData('reasons_grad', []);
+                        }}
+                    >
+                        Clear selections
+                    </button>
                 </fieldset>
             </SurveyLayout>
         </>
