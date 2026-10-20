@@ -20,7 +20,9 @@ type Props = PropsWithChildren<{
     title: string;
     description: string;
     backHref: string;
+    nextHref: string;
     processing?: boolean;
+    
 }>;
 
 export default function SurveyLayout({
@@ -28,6 +30,7 @@ export default function SurveyLayout({
     title,
     description,
     backHref,
+    nextHref,
     processing = false,
     children,
 }: Props) {
@@ -102,13 +105,16 @@ export default function SurveyLayout({
                     >
                         ← Back
                     </Link>
+                    
                     <button
                         type="submit"
                         form={SURVEY_FORM_ID}
                         disabled={processing}
                         className="rounded-md bg-[#f0f0f0] px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none disabled:opacity-60"
                     >
+                        <Link rel="stylesheet" href={nextHref}>
                         Next →
+                        </Link>
                     </button>
                 </div>
             </div>
