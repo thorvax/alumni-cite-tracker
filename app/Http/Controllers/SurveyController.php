@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class SurveyController extends Controller
+class SurveyController 
 {
     private const GENERAL_KEY = 'survey.general_information';
     private const EDUCATION_KEY = 'survey.educational_background';

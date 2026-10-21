@@ -1,0 +1,111 @@
+[1mdiff --git a/app/Http/Controllers/AlumniController.php b/app/Http/Controllers/AlumniController.php[m
+[1mindex c985056..976d821 100644[m
+[1m--- a/app/Http/Controllers/AlumniController.php[m
+[1m+++ b/app/Http/Controllers/AlumniController.php[m
+[36m@@ -2,8 +2,6 @@[m
+ [m
+ namespace App\Http\Controllers;[m
+ [m
+[31m-use Illuminate\Http\Request;[m
+[31m-[m
+ class AlumniController extends Controller[m
+ {[m
+     //[m
+[1mdiff --git a/app/Http/Controllers/SurveyController.php b/app/Http/Controllers/SurveyController.php[m
+[1mindex f4a9307..58a6eb0 100644[m
+[1m--- a/app/Http/Controllers/SurveyController.php[m
+[1m+++ b/app/Http/Controllers/SurveyController.php[m
+[36m@@ -10,6 +10,7 @@[m
+ class SurveyController extends Controller[m
+ {[m
+     private const GENERAL_KEY = 'survey.general_information';[m
+[32m+[m
+     private const EDUCATION_KEY = 'survey.educational_background';[m
+ [m
+     public function generalInformation(Request $request): Response[m
+[36m@@ -45,12 +46,12 @@[m [mpublic function storeGeneralInformation(Request $request): RedirectResponse[m
+         ]);[m
+ [m
+         $request->session()->put(self::GENERAL_KEY, $data);[m
+[32m+[m
+         // to_route('survey.educational');[m
+         // TODO: redirect to step B (Educational Background) once that page exists.[m
+         return back();[m
+     }[m
+ [m
+[31m-[m
+     public function educationalBackground(Request $request): Response[m
+     {[m
+         return Inertia::render('survey/educational-background', [[m
+[1mdiff --git a/composer.lock b/composer.lock[m
+[1mindex a0747f7..c6a7244 100644[m
+[1m--- a/composer.lock[m
+[1m+++ b/composer.lock[m
+[36m@@ -1889,16 +1889,16 @@[m
+         },[m
+         {[m
+             "name": "laravel/wayfinder",[m
+[31m-            "version": "v0.1.21",[m
+[32m+[m[32m            "version": "v0.1.23",[m
+             "source": {[m
+                 "type": "git",[m
+                 "url": "https://github.com/laravel/wayfinder.git",[m
+[31m-                "reference": "a85a996cea189f59cac14854f8b13319a29007f3"[m
+[32m+[m[32m                "reference": "e7b0914d194201e54ba320ef38137b47a7daca98"[m
+             },[m
+             "dist": {[m
+                 "type": "zip",[m
+[31m-                "url": "https://api.github.com/repos/laravel/wayfinder/zipball/a85a996cea189f59cac14854f8b13319a29007f3",[m
+[31m-                "reference": "a85a996cea189f59cac14854f8b13319a29007f3",[m
+[32m+[m[32m                "url": "https://api.github.com/repos/laravel/wayfinder/zipball/e7b0914d194201e54ba320ef38137b47a7daca98",[m
+[32m+[m[32m                "reference": "e7b0914d194201e54ba320ef38137b47a7daca98",[m
+                 "shasum": ""[m
+             },[m
+             "require": {[m
+[36m@@ -1951,7 +1951,7 @@[m
+                 "issues": "https://github.com/laravel/wayfinder/issues",[m
+                 "source": "https://github.com/laravel/wayfinder"[m
+             },[m
+[31m-            "time": "2026-08-04T21:55:43+00:00"[m
+[32m+[m[32m            "time": "2026-10-16T14:24:32+00:00"[m
+         },[m
+         {[m
+             "name": "league/commonmark",[m
+[1mdiff --git a/package-lock.json b/package-lock.json[m
+[1mindex 00c3bc7..6799d4f 100644[m
+[1m--- a/package-lock.json[m
+[1m+++ b/package-lock.json[m
+[36m@@ -490,9 +490,9 @@[m
+             }[m
+         },[m
+         "node_modules/@laravel/vite-plugin-wayfinder": {[m
+[31m-            "version": "0.1.10",[m
+[31m-            "resolved": "https://registry.npmjs.org/@laravel/vite-plugin-wayfinder/-/vite-plugin-wayfinder-0.1.10.tgz",[m
+[31m-            "integrity": "sha512-59ZCMCEeC1UcZkqbvn+G06C4D0C/jCm525gTft7T7RPAo+0ZaHtoKl9r86OFVFd/BwuJiOYky4zJUrAPRKyRaA==",[m
+[32m+[m[32m            "version": "0.1.11",[m
+[32m+[m[32m            "resolved": "https://registry.npmjs.org/@laravel/vite-plugin-wayfinder/-/vite-plugin-wayfinder-0.1.11.tgz",[m
+[32m+[m[32m            "integrity": "sha512-KU7g7+2aVs3OzvdD9RtZaIwh2Bydk/bCzjFDz8G+G6QfloTJpmgF9jTJrrlyqGspi8DhgNYGzSReMwHQKY2OCg==",[m
+             "dev": true,[m
+             "license": "MIT"[m
+         },[m
+[1mdiff --git a/routes/survey.php b/routes/survey.php[m
+[1mindex 53fa488..9800871 100644[m
+[1m--- a/routes/survey.php[m
+[1m+++ b/routes/survey.php[m
+[36m@@ -9,5 +9,4 @@[m
+ Route::post('survey/general-information', [SurveyController::class, 'storeGeneralInformation'])[m
+     ->name('survey.general.store');[m
+ [m
+[31m-[m
+ Route::get('survey/educational-background', [SurveyController::class, 'educationalBackground'])->name('survey.educational');[m
+[1mdiff --git a/routes/web.php b/routes/web.php[m
+[1mindex 3b306fd..763b1b3 100644[m
+[1m--- a/routes/web.php[m
+[1m+++ b/routes/web.php[m
+[36m@@ -9,4 +9,4 @@[m
+ });[m
+ [m
+ require __DIR__.'/settings.php';[m
+[31m-require __DIR__.'/survey.php';[m
+\ No newline at end of file[m
+[32m+[m[32mrequire __DIR__.'/survey.php';[m
