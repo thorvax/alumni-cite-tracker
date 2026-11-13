@@ -3,11 +3,17 @@
 use App\Http\Controllers\SurveyController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('survey/general-information', [SurveyController::class, 'generalInformation'])
-    ->name('survey.general');
+Route::controller(SurveyController::class)
+    ->prefix('survey')
+    ->name('survey.')
+    ->group(function () {
+        Route::get('/', 'start')->name('start');
 
-Route::post('survey/general-information', [SurveyController::class, 'storeGeneralInformation'])
-    ->name('survey.general.store');
+        Route::get('{step}', 'show')
+            ->whereIn('step', SurveyController::STEPS)
+            ->name('show');
 
-
-Route::get('survey/educational-background', [SurveyController::class, 'educationalBackground'])->name('survey.educational');
+        Route::post('{step}', 'store')
+            ->whereIn('step', SurveyController::STEPS)
+            ->name('store');
+    });
