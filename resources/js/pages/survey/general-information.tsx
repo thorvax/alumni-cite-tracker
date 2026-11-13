@@ -1,169 +1,61 @@
 import { Head, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
-import { NCR_CODE, usePsgcList, type PsgcItem } from '@/hooks/use-psgc';
+import {
+    Field,
+    Question,
+    RadioGroup,
+    SectionHeading,
+    SelectInput,
+    TextInput,
+} from '@/components/survey/form-controls';
 import SurveyLayout, { SURVEY_FORM_ID } from '@/layouts/survey-layout';
-import SectionHeading from '@/components/survey/section-heading';
-import Field, { inputClass } from '@/components/survey/input-field';
+import { stepUrl, withDefaults } from '@/lib/survey';
+import { civilStatuses, regions } from '@/lib/survey-options';
 
-type GeneralInformationData = {
+type Data = {
     first_name: string;
     middle_name: string;
     last_name: string;
     civil_status: string;
-    sex: '' | 'male' | 'female';
+    sex: string;
     birth_date: string;
     region: string;
     province: string;
     city: string;
     barangay: string;
-    region_code: string;
-    province_code: string;
-    city_code: string;
-    barangay_code: string;
     house_no: string;
     mobile_primary: string;
     mobile_secondary: string;
 };
 
-const civilStatuses = ['Single', 'Married', 'Widowed', 'Separated', 'Divorced'];
-
-function PsgcSelect({
-    id,
-    items,
-    value,
-    loading,
-    failed,
-    disabled,
-    onChange,
-}: {
-    id: string;
-    items: PsgcItem[];
-    value: string;
-    loading?: boolean;
-    failed?: boolean;
-    disabled?: boolean;
-    onChange: (code: string) => void;
-}) {
-    return (
-        <select
-            id={id}
-            className={inputClass}
-            value={value}
-            disabled={disabled || loading || failed}
-            onChange={(e) => onChange(e.target.value)}
-        >
-            <option value="">
-                {loading
-                    ? 'Loading…'
-                    : failed
-                      ? 'Could not load. Refresh the page'
-                      : '— Select —'}
-            </option>
-            {items.map((item) => (
-                <option key={item.code} value={item.code}>
-                    {item.name}
-                </option>
-            ))}
-        </select>
-    );
-}
+const defaults: Data = {
+    first_name: '',
+    middle_name: '',
+    last_name: '',
+    civil_status: '',
+    sex: '',
+    birth_date: '',
+    region: '',
+    province: '',
+    city: '',
+    barangay: '',
+    house_no: '',
+    mobile_primary: '',
+    mobile_secondary: '',
+};
 
 export default function GeneralInformation({
     draft,
 }: {
-    draft: Partial<Record<keyof GeneralInformationData, string | null>>;
+    draft: Partial<Data>;
 }) {
-    const { data, setData, post, processing, errors } =
-        useForm<GeneralInformationData>({
-            first_name: draft.first_name ?? '',
-            middle_name: draft.middle_name ?? '',
-            last_name: draft.last_name ?? '',
-            civil_status: draft.civil_status ?? '',
-            sex: (draft.sex as GeneralInformationData['sex']) ?? '',
-            birth_date: draft.birth_date ?? '',
-            region: draft.region ?? '',
-            province: draft.province ?? '',
-            city: draft.city ?? '',
-            barangay: draft.barangay ?? '',
-            region_code: draft.region_code ?? '',
-            province_code: draft.province_code ?? '',
-            city_code: draft.city_code ?? '',
-            barangay_code: draft.barangay_code ?? '',
-            house_no: draft.house_no ?? '',
-            mobile_primary: draft.mobile_primary ?? '',
-            mobile_secondary: draft.mobile_secondary ?? '',
-        });
-
-    const regions = usePsgcList('/regions/');
-    const isNcr = data.region_code === NCR_CODE;
-
-    const provinces = usePsgcList(
-        data.region_code && !isNcr
-            ? `/regions/${data.region_code}/provinces/`
-            : null,
+    const { data, setData, post, processing, errors } = useForm<Data>(
+        withDefaults(defaults, draft),
     );
-
-    const cities = usePsgcList(
-        isNcr
-            ? `/regions/${NCR_CODE}/cities-municipalities/`
-            : data.province_code
-              ? `/provinces/${data.province_code}/cities-municipalities/`
-              : null,
-    );
-
-    const barangays = usePsgcList(
-        data.city_code
-            ? `/cities-municipalities/${data.city_code}/barangays/`
-            : null,
-    );
-
-    const nameOf = (items: PsgcItem[], code: string) =>
-        items.find((item) => item.code === code)?.name ?? '';
-
-    // Changing a level clears everything below it.
-    const selectRegion = (code: string) =>
-        setData((prev) => ({
-            ...prev,
-            region_code: code,
-            region: nameOf(regions.items, code),
-            province_code: '',
-            province: code === NCR_CODE ? 'Metro Manila' : '',
-            city_code: '',
-            city: '',
-            barangay_code: '',
-            barangay: '',
-        }));
-
-    const selectProvince = (code: string) =>
-        setData((prev) => ({
-            ...prev,
-            province_code: code,
-            province: nameOf(provinces.items, code),
-            city_code: '',
-            city: '',
-            barangay_code: '',
-            barangay: '',
-        }));
-
-    const selectCity = (code: string) =>
-        setData((prev) => ({
-            ...prev,
-            city_code: code,
-            city: nameOf(cities.items, code),
-            barangay_code: '',
-            barangay: '',
-        }));
-
-    const selectBarangay = (code: string) =>
-        setData((prev) => ({
-            ...prev,
-            barangay_code: code,
-            barangay: nameOf(barangays.items, code),
-        }));
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        post('/survey/general-information');
+        post(stepUrl('general-information'));
     };
 
     return (
@@ -171,17 +63,18 @@ export default function GeneralInformation({
             <Head title="General Information" />
 
             <SurveyLayout
-                current={1}
+                step={1}
+                page="general"
                 title="A. General Information"
                 description="Please provide your personal details."
                 backHref="/"
-                nextHref="/survey/educational-background"
                 processing={processing}
             >
                 <form
                     id={SURVEY_FORM_ID}
                     onSubmit={submit}
-                    className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2"
+                    className="sv-grid"
+                    noValidate
                 >
                     <Field
                         id="first_name"
@@ -189,9 +82,8 @@ export default function GeneralInformation({
                         required
                         error={errors.first_name}
                     >
-                        <input
+                        <TextInput
                             id="first_name"
-                            className={inputClass}
                             placeholder="e.g. Juan"
                             value={data.first_name}
                             onChange={(e) =>
@@ -205,9 +97,8 @@ export default function GeneralInformation({
                         label="Middle Name"
                         error={errors.middle_name}
                     >
-                        <input
+                        <TextInput
                             id="middle_name"
-                            className={inputClass}
                             placeholder="Optional"
                             value={data.middle_name}
                             onChange={(e) =>
@@ -222,9 +113,8 @@ export default function GeneralInformation({
                         required
                         error={errors.last_name}
                     >
-                        <input
+                        <TextInput
                             id="last_name"
-                            className={inputClass}
                             placeholder="e.g. dela Cruz"
                             value={data.last_name}
                             onChange={(e) =>
@@ -239,50 +129,27 @@ export default function GeneralInformation({
                         required
                         error={errors.civil_status}
                     >
-                        <select
+                        <SelectInput
                             id="civil_status"
-                            className={inputClass}
+                            options={civilStatuses}
                             value={data.civil_status}
                             onChange={(e) =>
                                 setData('civil_status', e.target.value)
                             }
-                        >
-                            <option value="">— Select —</option>
-                            {civilStatuses.map((s) => (
-                                <option key={s} value={s}>
-                                    {s}
-                                </option>
-                            ))}
-                        </select>
+                        />
                     </Field>
 
-                    <Field
-                        id="sex-male"
-                        label="Sex"
-                        required
-                        error={errors.sex}
-                    >
-                        <div className="flex items-center gap-5 pt-1">
-                            {(['male', 'female'] as const).map((value) => (
-                                <label
-                                    key={value}
-                                    htmlFor={`sex-${value}`}
-                                    className="flex cursor-pointer items-center gap-2 text-sm"
-                                >
-                                    <input
-                                        id={`sex-${value}`}
-                                        type="radio"
-                                        name="sex"
-                                        value={value}
-                                        checked={data.sex === value}
-                                        onChange={() => setData('sex', value)}
-                                        className="size-3.5 accent-white"
-                                    />
-                                    {value === 'male' ? 'Male' : 'Female'}
-                                </label>
-                            ))}
-                        </div>
-                    </Field>
+                    <Question label="Sex" required error={errors.sex}>
+                        <RadioGroup
+                            name="sex"
+                            options={[
+                                { value: 'male', label: 'Male' },
+                                { value: 'female', label: 'Female' },
+                            ]}
+                            value={data.sex}
+                            onChange={(value) => setData('sex', value)}
+                        />
+                    </Question>
 
                     <Field
                         id="birth_date"
@@ -290,10 +157,9 @@ export default function GeneralInformation({
                         required
                         error={errors.birth_date}
                     >
-                        <input
+                        <TextInput
                             id="birth_date"
                             type="date"
-                            className={inputClass}
                             value={data.birth_date}
                             onChange={(e) =>
                                 setData('birth_date', e.target.value)
@@ -309,13 +175,11 @@ export default function GeneralInformation({
                         required
                         error={errors.region}
                     >
-                        <PsgcSelect
+                        <SelectInput
                             id="region"
-                            items={regions.items}
-                            value={data.region_code}
-                            loading={regions.loading}
-                            failed={regions.failed}
-                            onChange={selectRegion}
+                            options={regions}
+                            value={data.region}
+                            onChange={(e) => setData('region', e.target.value)}
                         />
                     </Field>
 
@@ -325,18 +189,13 @@ export default function GeneralInformation({
                         required
                         error={errors.province}
                     >
-                        <PsgcSelect
+                        <TextInput
                             id="province"
-                            items={
-                                isNcr
-                                    ? [{ code: 'ncr', name: 'Metro Manila' }]
-                                    : provinces.items
+                            placeholder="e.g. Pangasinan"
+                            value={data.province}
+                            onChange={(e) =>
+                                setData('province', e.target.value)
                             }
-                            value={isNcr ? 'ncr' : data.province_code}
-                            loading={provinces.loading}
-                            failed={provinces.failed}
-                            disabled={isNcr}
-                            onChange={selectProvince}
                         />
                     </Field>
 
@@ -346,13 +205,11 @@ export default function GeneralInformation({
                         required
                         error={errors.city}
                     >
-                        <PsgcSelect
+                        <TextInput
                             id="city"
-                            items={cities.items}
-                            value={data.city_code}
-                            loading={cities.loading}
-                            failed={cities.failed}
-                            onChange={selectCity}
+                            placeholder="e.g. Urdaneta City"
+                            value={data.city}
+                            onChange={(e) => setData('city', e.target.value)}
                         />
                     </Field>
 
@@ -362,13 +219,13 @@ export default function GeneralInformation({
                         required
                         error={errors.barangay}
                     >
-                        <PsgcSelect
+                        <TextInput
                             id="barangay"
-                            items={barangays.items}
-                            value={data.barangay_code}
-                            loading={barangays.loading}
-                            failed={barangays.failed}
-                            onChange={selectBarangay}
+                            placeholder="e.g. Nancamaliran"
+                            value={data.barangay}
+                            onChange={(e) =>
+                                setData('barangay', e.target.value)
+                            }
                         />
                     </Field>
 
@@ -377,9 +234,8 @@ export default function GeneralInformation({
                         label="House #, Building #"
                         error={errors.house_no}
                     >
-                        <input
+                        <TextInput
                             id="house_no"
-                            className={inputClass}
                             placeholder="Optional"
                             value={data.house_no}
                             onChange={(e) =>
@@ -387,6 +243,7 @@ export default function GeneralInformation({
                             }
                         />
                     </Field>
+                    <div />
 
                     <SectionHeading>Contact</SectionHeading>
 
@@ -396,11 +253,10 @@ export default function GeneralInformation({
                         required
                         error={errors.mobile_primary}
                     >
-                        <input
+                        <TextInput
                             id="mobile_primary"
                             type="tel"
                             inputMode="tel"
-                            className={inputClass}
                             placeholder="e.g. 09xx-xxx-xxxx"
                             value={data.mobile_primary}
                             onChange={(e) =>
@@ -414,11 +270,10 @@ export default function GeneralInformation({
                         label="Mobile Number (Secondary)"
                         error={errors.mobile_secondary}
                     >
-                        <input
+                        <TextInput
                             id="mobile_secondary"
                             type="tel"
                             inputMode="tel"
-                            className={inputClass}
                             placeholder="Optional"
                             value={data.mobile_secondary}
                             onChange={(e) =>
