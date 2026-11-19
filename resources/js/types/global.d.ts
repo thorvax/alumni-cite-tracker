@@ -13,7 +13,7 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             /** Set when a graduate is logged in with the alumni login. */
-            alumni: { last_name: string | null } | null;
+            alumni: { last_name: string | null; answered: boolean } | null;
             [key: string]: unknown;
         };
     }
