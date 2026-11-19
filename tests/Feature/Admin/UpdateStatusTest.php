@@ -107,7 +107,7 @@ it('saves the automatic reminder settings', function () {
         ->and(UpdateReminderService::staleMonths())->toBe(9);
 
     $this->actingAs($this->admin)
-        ->get('/settings/system')
+        ->get('/reminders/update')
         ->assertInertia(fn (Assert $page) => $page
             ->where('updateReminders.months', 3)
             ->where('updateReminders.staleMonths', 9)
@@ -120,7 +120,7 @@ it('shows how many alumni each manual choice would email', function () {
     respondentOn(now()->subWeek());
 
     $this->actingAs($this->admin)
-        ->get('/settings/system')
+        ->get('/reminders/update')
         ->assertInertia(fn (Assert $page) => $page
             ->where('manualCounts.all', 3)
             ->where('manualCounts.stale', ['3' => 2, '6' => 1, '9' => 1, '12' => 1]));
@@ -156,7 +156,7 @@ it('saves who to remind from the Settings page', function () {
     expect(UpdateReminderService::target())->toBe('all');
 
     $this->actingAs($this->admin)
-        ->get('/settings/system')
+        ->get('/reminders/update')
         ->assertInertia(fn (Assert $page) => $page->where('updateReminders.target', 'all'));
 
     $this->actingAs($this->admin)

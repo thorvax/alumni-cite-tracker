@@ -1633,3 +1633,13 @@
         display: block;
     }
 }
+
+/* ---------- Reminders section tabs ---------- */
+.ad-subnav {
+    margin: 0 0 18px;
+}
+.ad-subnav .ad-btn[aria-current='page'] {
+    background: var(--ad-solid-bg);
+    border-color: var(--ad-solid-bg);
+    color: var(--ad-solid-fg);
+}

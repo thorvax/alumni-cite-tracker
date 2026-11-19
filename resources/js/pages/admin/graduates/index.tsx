@@ -66,12 +66,6 @@ export default function GraduatesIndex({
                     >
                         Filter
                     </Link>
-                    <Link href="/graduates/import" className="ad-btn">
-                        Bulk Upload
-                    </Link>
-                    <Link href="/graduates/updates" className="ad-btn">
-                        Update Status
-                    </Link>
                     <Link href="/graduates/create" className="ad-btn">
                         Add Graduate
                     </Link>

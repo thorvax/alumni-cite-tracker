@@ -8,7 +8,6 @@ use App\Services\InvitationService;
 use App\Support\Import\StudentSheetReader;
 use App\Support\Import\StudentSheetValidator;
 use App\Support\Import\StudentTemplate;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -28,7 +27,22 @@ class GraduateImportController extends Controller
 
     public function __construct(private readonly InvitationService $invitations) {}
 
+    /**
+     * Bulk Upload page: upload a file, review it, import.
+     */
     public function index(Request $request): Response
+    {
+        return Inertia::render('admin/graduates/import', [
+            'flash' => $request->session()->get('status'),
+            'preview' => $request->session()->get(self::SESSION_KEY.'.preview'),
+        ]);
+    }
+
+    /**
+     * Invitations page: email status of everyone uploaded, Send/Resend, and
+     * the "No email address" list.
+     */
+    public function invitations(Request $request): Response
     {
         $filter = $request->query('status');
         $filter = in_array($filter, self::STATUS_FILTERS, true) ? $filter : null;
@@ -45,9 +59,8 @@ class GraduateImportController extends Controller
             ->filter(fn (Graduate $g) => filled($g->email))
             ->when($filter, fn ($c) => $c->filter(fn (Graduate $g) => $g->invitationStatus() === $filter));
 
-        return Inertia::render('admin/graduates/import', [
+        return Inertia::render('admin/graduates/invitations', [
             'flash' => $request->session()->get('status'),
-            'preview' => $request->session()->get(self::SESSION_KEY.'.preview'),
             'counts' => $counts,
             'filter' => $filter,
             'recipients' => $withEmail->take(300)->map(fn (Graduate $g) => $g->toInvitationRow())->values(),
@@ -56,13 +69,6 @@ class GraduateImportController extends Controller
                 ->filter(fn (Graduate $g) => $g->invitationStatus() === 'no_email')
                 ->map(fn (Graduate $g) => $g->toInvitationRow())
                 ->values(),
-            'reminders' => [
-                'enabled' => AppSetting::flag('reminder_enabled', false),
-                'interval_days' => (int) AppSetting::value('reminder_interval_days', 7),
-                'max' => (int) AppSetting::value('reminder_max', 3),
-                'hour' => (int) AppSetting::value('reminder_hour', 8),
-                'waiting' => $this->waitingForReminder()->count(),
-            ],
         ]);
     }
 
@@ -167,7 +173,7 @@ class GraduateImportController extends Controller
 
         $request->session()->forget(self::SESSION_KEY);
 
-        return to_route('graduates.import')->with('status', "Imported {$created} graduate(s). Queued ".count($toEmail).' email(s).');
+        return to_route('graduates.invitations')->with('status', "Imported {$created} graduate(s). Queued ".count($toEmail).' email(s).');
     }
 
     public function cancel(Request $request): RedirectResponse
@@ -246,7 +252,7 @@ class GraduateImportController extends Controller
      */
     public function remind(): RedirectResponse
     {
-        $count = $this->invitations->queueMany($this->waitingForReminder(), reminder: true);
+        $count = $this->invitations->queueMany($this->invitations->waitingForReminder(), reminder: true);
 
         return back()->with('status', "Queued {$count} reminder(s).");
     }
@@ -266,13 +272,5 @@ class GraduateImportController extends Controller
         AppSetting::set('reminder_hour', $data['hour']);
 
         return back()->with('status', 'Reminder schedule saved.');
-    }
-
-    /**
-     * @return Collection<int, Graduate>
-     */
-    private function waitingForReminder(): Collection
-    {
-        return Graduate::query()->invited()->withEmail()->whereNull('survey_completed_at')->where('invite_status', 'sent')->get();
     }
 }

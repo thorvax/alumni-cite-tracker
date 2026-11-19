@@ -1,11 +1,45 @@
 import { Link, router } from '@inertiajs/react';
-import { FileText, House, LogOut, Settings, Users } from 'lucide-react';
+import {
+    BellRing,
+    ClipboardCheck,
+    FileText,
+    House,
+    LogOut,
+    Mail,
+    Settings,
+    Upload,
+    Users,
+} from 'lucide-react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import ThemeToggle from '@/components/survey/theme-toggle';
 
 const nav = [
     { key: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: House },
     { key: 'graduates', label: 'Graduates', href: '/graduates', icon: Users },
+    {
+        key: 'import',
+        label: 'Bulk Upload',
+        href: '/graduates/import',
+        icon: Upload,
+    },
+    {
+        key: 'invitations',
+        label: 'Invitations',
+        href: '/graduates/invitations',
+        icon: Mail,
+    },
+    {
+        key: 'reminders',
+        label: 'Reminders',
+        href: '/reminders/survey',
+        icon: BellRing,
+    },
+    {
+        key: 'updates',
+        label: 'Update Status',
+        href: '/graduates/updates',
+        icon: ClipboardCheck,
+    },
     { key: 'reports', label: 'Reports', href: '/reports', icon: FileText },
     {
         key: 'settings',

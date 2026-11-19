@@ -129,7 +129,7 @@ it('saves the update reminder settings from the admin Settings page', function (
     answeredOn(now()->subYear());
 
     $this->actingAs($admin)
-        ->get('/settings/system')
+        ->get('/reminders/update')
         ->assertInertia(fn (Assert $page) => $page
             ->where('updateReminders.enabled', false)
             ->where('updateReminders.months', 6)

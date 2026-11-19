@@ -80,20 +80,17 @@ export default function GraduateUpdates({
             <Head title="Update Status" />
 
             <AdminLayout
-                active="graduates"
+                active="updates"
                 page="graduates"
                 title="Update Status"
                 subtitle={`Who has kept their survey answers up to date (within the last ${months} months) and what changed.`}
                 actions={
                     <>
-                        <Link href="/graduates" className="ad-btn">
-                            ← Graduates
-                        </Link>
                         <Link href="/graduates/reminders" className="ad-btn">
                             Reminder List
                         </Link>
-                        <Link href="/settings/system" className="ad-btn">
-                            Reminder settings
+                        <Link href="/reminders/update" className="ad-btn">
+                            Update reminders
                         </Link>
                     </>
                 }

@@ -11,7 +11,55 @@ beforeEach(function () {
 
 it('redirects guests from every admin page to the login page', function (string $url) {
     $this->get($url)->assertRedirect('/login');
-})->with(['/dashboard', '/graduates', '/graduates/create', '/search', '/reports', '/settings/system']);
+})->with([
+    '/dashboard', '/graduates', '/graduates/create', '/graduates/import', '/graduates/invitations',
+    '/reminders/survey', '/reminders/update', '/graduates/reminders', '/graduates/updates',
+    '/search', '/reports', '/settings/system',
+]);
+
+it('opens every page in the admin menu', function (string $url, string $component) {
+    $this->actingAs($this->admin)
+        ->get($url)
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component($component));
+})->with([
+    ['/graduates/import', 'admin/graduates/import'],
+    ['/graduates/invitations', 'admin/graduates/invitations'],
+    ['/reminders/survey', 'admin/reminders/survey'],
+    ['/reminders/update', 'admin/reminders/update'],
+    ['/graduates/reminders', 'admin/graduates/reminders'],
+    ['/graduates/updates', 'admin/graduates/updates'],
+    ['/settings/system', 'admin/settings'],
+]);
+
+it('sends /reminders to the Survey reminders tab', function () {
+    $this->actingAs($this->admin)->get('/reminders')->assertRedirect('/reminders/survey');
+});
+
+it('keeps each page to one job', function () {
+    $this->actingAs($this->admin)
+        ->get('/graduates/import')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('preview')
+            ->missing('recipients')
+            ->missing('reminders'));
+
+    $this->actingAs($this->admin)
+        ->get('/settings/system')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('account')
+            ->has('system')
+            ->missing('updateReminders'));
+});
+
+it('shows how many people are waiting for a survey reminder', function () {
+    Graduate::factory()->notAnswered()->create(['invite_status' => 'sent']);
+    Graduate::factory()->notAnswered()->create(['invite_status' => 'sent', 'is_demo' => true]); // never emailed
+
+    $this->actingAs($this->admin)
+        ->get('/reminders/survey')
+        ->assertInertia(fn (Assert $page) => $page->where('reminders.waiting', 1));
+});
 
 it('shows dashboard totals', function () {
     Graduate::factory()->create(['employment_status' => 'Employed']);

@@ -14,7 +14,7 @@ class SettingsController extends Controller
 {
     private const FLAGS = ['allow_registration', 'email_notifications', 'activity_logs'];
 
-    public function show(Request $request, UpdateReminderService $updates): Response
+    public function show(Request $request): Response
     {
         $user = $request->user('web');
 
@@ -27,24 +27,6 @@ class SettingsController extends Controller
             'system' => collect(self::FLAGS)
                 ->mapWithKeys(fn (string $flag) => [$flag => AppSetting::flag($flag)])
                 ->all(),
-            // Automatic reminders (saved, sent daily by the scheduler).
-            'updateReminders' => [
-                'enabled' => AppSetting::flag('update_reminder_enabled', false),
-                'months' => UpdateReminderService::months(),
-                'target' => UpdateReminderService::target(),
-                'staleMonths' => UpdateReminderService::staleMonths(),
-                'monthOptions' => UpdateReminderService::MONTH_OPTIONS,
-                'hour' => (int) AppSetting::value('reminder_hour', 8),
-                'due' => $updates->due()->count(),
-            ],
-            // Manual "Send now": how many each choice would email.
-            'manualCounts' => [
-                'all' => $updates->audience(UpdateReminderService::TARGET_ALL, 0)->count(),
-                'stale' => collect(UpdateReminderService::MONTH_OPTIONS)
-                    ->mapWithKeys(fn (int $m) => [$m => $updates->audience(UpdateReminderService::TARGET_STALE, $m)->count()])
-                    ->all(),
-            ],
-            'flash' => $request->session()->get('status'),
         ]);
     }
 

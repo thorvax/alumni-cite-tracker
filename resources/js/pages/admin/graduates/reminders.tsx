@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import Pagination from '@/components/admin/pagination';
+import ReminderTabs from '@/components/admin/reminder-tabs';
 import WhoToRemind, {
     type ReminderTarget,
 } from '@/components/admin/who-to-remind';
@@ -70,7 +71,7 @@ function Explanation({
                 {automatic.enabled
                     ? `Automatic reminders are on: every ${automatic.months} months to ${who}. These alumni will be emailed at the next daily run.`
                     : `Automatic reminders are off, so nobody is emailed automatically. With the saved settings (every ${automatic.months} months, ${who}) these alumni would be emailed.`}{' '}
-                <Link href="/settings/system">Change in Settings</Link>.
+                <Link href="/reminders/update">Change the schedule</Link>.
             </p>
         );
     }
@@ -79,8 +80,8 @@ function Explanation({
         return (
             <p className="ad-note">
                 Who &quot;Send Update Reminders Now&quot; on{' '}
-                <Link href="/settings/system">Settings</Link> would email with
-                this choice.
+                <Link href="/reminders/update">Update reminders</Link> would
+                email with this choice.
             </p>
         );
     }
@@ -113,21 +114,16 @@ export default function GraduateReminders({
             <Head title="Reminder List" />
 
             <AdminLayout
-                active="graduates"
+                active="reminders"
                 page="graduates"
-                title="Reminder List"
-                subtitle="Alumni who are getting “please update your answers” emails."
-                actions={
-                    <>
-                        <Link href="/graduates/updates" className="ad-btn">
-                            Update Status
-                        </Link>
-                        <Link href="/settings/system" className="ad-btn">
-                            Reminder settings
-                        </Link>
-                    </>
-                }
+                title="Reminders"
+                subtitle="Remind graduates to answer, or to keep their answers up to date."
             >
+                <ReminderTabs active="list" />
+
+                <p className="ad-sub" style={{ margin: '0 0 6px' }}>
+                    Alumni who are getting “please update your answers” emails.
+                </p>
                 <div className="ad-chips" aria-label="Which list">
                     {(Object.keys(LIST_LABELS) as ListKey[]).map((key) => (
                         <Link

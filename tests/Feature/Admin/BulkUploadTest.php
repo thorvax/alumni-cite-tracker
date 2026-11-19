@@ -78,7 +78,7 @@ it('lists IDs that are already uploaded and skips them on confirm', function () 
             ->where('preview.new_count', 2)
             ->where('preview.without_email', 1));
 
-    $this->actingAs($this->admin)->post('/graduates/import/confirm')->assertRedirect('/graduates/import');
+    $this->actingAs($this->admin)->post('/graduates/import/confirm')->assertRedirect('/graduates/invitations');
 
     expect(Graduate::where('student_id', '20240002')->exists())->toBeTrue()
         ->and(Graduate::where('student_id', '20240003')->first()->invitationStatus())->toBe('no_email')
@@ -96,7 +96,7 @@ it('imports the optional Course and Year Graduated columns', function () {
         ."20240003,Reyes,,,\n";
 
     $this->actingAs($this->admin)->post('/graduates/import/preview', ['file' => csvUpload($csv)]);
-    $this->actingAs($this->admin)->post('/graduates/import/confirm')->assertRedirect('/graduates/import');
+    $this->actingAs($this->admin)->post('/graduates/import/confirm')->assertRedirect('/graduates/invitations');
 
     $cruz = Graduate::where('student_id', '20240001')->first();
     $santos = Graduate::where('student_id', '20240002')->first();

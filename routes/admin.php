@@ -6,6 +6,7 @@ use App\Http\Controllers\GraduateHistoryController;
 use App\Http\Controllers\GraduateImportController;
 use App\Http\Controllers\GraduateRemindersController;
 use App\Http\Controllers\GraduateUpdatesController;
+use App\Http\Controllers\RemindersController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
@@ -28,6 +29,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{graduate}/resend', 'resend')->name('.resend');
         Route::patch('{graduate}/email', 'saveEmail')->name('.email');
     });
+
+    // Invitations: email status of uploaded graduates (actions stay under graduates/import).
+    Route::get('graduates/invitations', [GraduateImportController::class, 'invitations'])->name('graduates.invitations');
+
+    // Reminders: survey reminders (not answered yet) and update reminders.
+    Route::redirect('reminders', 'reminders/survey');
+    Route::get('reminders/survey', [RemindersController::class, 'survey'])->name('reminders.survey');
+    Route::get('reminders/update', [RemindersController::class, 'update'])->name('reminders.update');
 
     // Declared before the resource so "updates" is not read as a graduate id.
     Route::get('graduates/updates', GraduateUpdatesController::class)->name('graduates.updates');

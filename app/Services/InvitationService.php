@@ -36,6 +36,22 @@ class InvitationService
     }
 
     /**
+     * Emailed and not answered yet (for "Send reminder now"). Demo data excluded.
+     *
+     * @return Collection<int, Graduate>
+     */
+    public function waitingForReminder(): Collection
+    {
+        return Graduate::query()
+            ->where('is_demo', false)
+            ->invited()
+            ->withEmail()
+            ->whereNull('survey_completed_at')
+            ->where('invite_status', 'sent')
+            ->get();
+    }
+
+    /**
      * Emailed, not yet answered, and due another reminder under the admin's
      * schedule (every N days, up to a maximum).
      *

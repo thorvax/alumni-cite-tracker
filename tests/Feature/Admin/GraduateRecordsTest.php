@@ -72,7 +72,7 @@ it('does not email the link when "Email the survey link now" is unticked', funct
     Queue::assertNothingPushed();
 });
 
-it('lists a graduate without an email under "No email" on the Bulk Upload page', function () {
+it('lists a graduate without an email under "No email" on the Invitations page', function () {
     Queue::fake();
 
     $this->actingAs($this->admin)->post('/graduates', graduateForm([
@@ -85,7 +85,7 @@ it('lists a graduate without an email under "No email" on the Bulk Upload page',
     Queue::assertNothingPushed();
 
     $this->actingAs($this->admin)
-        ->get('/graduates/import')
+        ->get('/graduates/invitations')
         ->assertInertia(fn (Assert $page) => $page
             ->has('noEmail', 1)
             ->where('noEmail.0.student_id', '20244012'));
