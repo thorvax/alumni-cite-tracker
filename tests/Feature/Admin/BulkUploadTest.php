@@ -206,12 +206,14 @@ it('does not remind people sooner than the interval', function () {
     Queue::assertNothingPushed();
 });
 
-it('prefills the survey from the personal link and updates the same record on submit', function () {
+it('prefills the survey for a logged-in graduate and updates the same record on submit', function () {
     $graduate = invitedGraduate();
 
-    $this->get('/survey/start/'.$graduate->invite_token)->assertRedirect('/survey/general-information');
+    // The personal link now starts account activation (see tests/Feature/Alumni).
+    $this->get('/survey/start/'.$graduate->invite_token)->assertRedirect('/alumni/activate');
 
-    $this->get('/survey/general-information')
+    $this->actingAs($graduate, 'graduate')
+        ->get('/survey/general-information')
         ->assertInertia(fn (Assert $page) => $page
             ->where('draft.last_name', 'Cruz')
             ->where('draft.email', 'cruz@example.com')
@@ -222,9 +224,10 @@ it('prefills the survey from the personal link and updates the same record on su
         'not_employed_reasons' => ['advance_study'],
     ]);
 
-    $this->withSession(['survey' => $answers, 'survey_invite' => ['token' => $graduate->invite_token]])
+    $this->actingAs($graduate, 'graduate')
+        ->withSession(['survey' => $answers])
         ->post('/survey/referral-submit', ['classmates' => null, 'certify' => true])
-        ->assertRedirect('/');
+        ->assertRedirect('/alumni/my-survey');
 
     expect(Graduate::count())->toBe(1)
         ->and($graduate->fresh()->survey_completed_at)->not->toBeNull()
@@ -233,6 +236,8 @@ it('prefills the survey from the personal link and updates the same record on su
 });
 
 it('requires an email address in the personal details', function () {
+    loginGraduate();
+
     $this->post('/survey/general-information', ['email' => 'not-an-email'])
         ->assertSessionHasErrors('email');
 });

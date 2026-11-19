@@ -2,8 +2,10 @@ import { Link, usePage } from '@inertiajs/react';
 import { Check } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
 import { CiteLogo, CollegeCredit } from '@/components/cite-logo';
+import LogoutButton from '@/components/survey/logout-button';
 import ThemeToggle from '@/components/survey/theme-toggle';
 import { type StepSlug, stepUrl, stepsFor } from '@/lib/survey';
+import { privacy } from '@/routes';
 
 export const SURVEY_FORM_ID = 'survey-form';
 
@@ -89,6 +91,8 @@ export default function SurveyLayout({
                             );
                         })}
                     </ol>
+
+                    <LogoutButton />
                 </div>
 
                 <div className="sv-credit">
@@ -106,6 +110,9 @@ export default function SurveyLayout({
                 </main>
 
                 <footer className="sv-footer">
+                    <Link href={privacy()} className="sv-footer-link">
+                        Privacy Policy
+                    </Link>
                     <Link href={backHref} className="sv-btn sv-btn-ghost">
                         ← Back
                     </Link>

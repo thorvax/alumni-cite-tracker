@@ -35,7 +35,12 @@ function surveyAnswers(array $employment): array
     ];
 }
 
-it('creates a graduate record when an employed person submits the survey', function () {
+// The survey needs the alumni login.
+beforeEach(function () {
+    $this->graduate = loginGraduate();
+});
+
+it('fills the logged-in graduate record when an employed person submits the survey', function () {
     $answers = surveyAnswers([
         'employed' => 'yes',
         'employment_status' => 'regular',
@@ -45,11 +50,12 @@ it('creates a graduate record when an employed person submits the survey', funct
 
     $this->withSession(['survey' => $answers])
         ->post('/survey/referral-submit', ['classmates' => null, 'certify' => true])
-        ->assertRedirect('/');
+        ->assertRedirect('/alumni/my-survey');
 
-    $graduate = Graduate::firstOrFail();
+    $graduate = Graduate::sole(); // no second row: the same record was updated
 
-    expect($graduate->full_name)->toBe('Juan Dela Cruz')
+    expect($graduate->id)->toBe($this->graduate->id)
+        ->and($graduate->full_name)->toBe('Juan Dela Cruz')
         ->and($graduate->gender)->toBe('Male')
         ->and($graduate->employment_status)->toBe('Employed')
         ->and($graduate->year_graduated)->toBe(2023)
@@ -64,7 +70,7 @@ it('lets people who are not employed skip the job form', function () {
 
     $this->withSession(['survey' => $answers])
         ->post('/survey/referral-submit', ['classmates' => null, 'certify' => true])
-        ->assertRedirect('/');
+        ->assertRedirect('/alumni/my-survey');
 
     expect(Graduate::firstOrFail()->employment_status)->toBe('Further Studies');
 });

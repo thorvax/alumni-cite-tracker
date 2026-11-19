@@ -2,20 +2,32 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Database\Factories\GraduateFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
+ * Graduates log in with the "graduate" guard (Student ID Number + password),
+ * separate from admins in the users table. password, activated_at and
+ * privacy_consented_at are set with forceFill(), never mass assignment.
+ *
  * @property Carbon|null $birth_date
  * @property Carbon|null $invite_sent_at
  * @property Carbon|null $last_reminded_at
  * @property Carbon|null $survey_completed_at
+ * @property CarbonImmutable|null $survey_updated_at
+ * @property CarbonImmutable|null $activated_at
+ * @property CarbonImmutable|null $privacy_consented_at
+ * @property string|null $password
+ * @property array<string, array<string, mixed>>|null $survey Answers keyed by step slug.
  */
-class Graduate extends Model
+class Graduate extends Authenticatable
 {
     /** @use HasFactory<GraduateFactory> */
     use HasFactory;
@@ -56,6 +68,13 @@ class Graduate extends Model
         'reminder_count',
         'last_reminded_at',
         'survey_completed_at',
+        'survey_updated_at',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'invite_token',
     ];
 
     /**
@@ -69,7 +88,33 @@ class Graduate extends Model
             'invite_sent_at' => 'datetime',
             'last_reminded_at' => 'datetime',
             'survey_completed_at' => 'datetime',
+            'survey_updated_at' => 'datetime',
+            'activated_at' => 'datetime',
+            'privacy_consented_at' => 'datetime',
+            'password' => 'hashed',
+            'is_demo' => 'boolean',
         ];
+    }
+
+    /**
+     * @return HasMany<GraduateLoginCode, $this>
+     */
+    public function loginCodes(): HasMany
+    {
+        return $this->hasMany(GraduateLoginCode::class);
+    }
+
+    public function isActivated(): bool
+    {
+        return $this->activated_at !== null;
+    }
+
+    /** "dela cruz" matches "Dela  Cruz" (case and extra spaces are ignored). */
+    public function hasLastName(string $typed): bool
+    {
+        $normalize = fn (string $name) => Str::lower(Str::squish($name));
+
+        return $this->last_name !== null && $normalize($typed) === $normalize($this->last_name);
     }
 
     /**
@@ -234,8 +279,14 @@ class Graduate extends Model
             'survey_completed_at' => now(),
         ];
 
-        // Someone who opened their personal link updates the record the upload created.
+        // A logged-in graduate updates the record the upload created. When they
+        // answered before, keep the first date and record this as an update.
         if ($existing !== null) {
+            if ($existing->survey_completed_at !== null) {
+                $attributes['survey_completed_at'] = $existing->survey_completed_at;
+                $attributes['survey_updated_at'] = now();
+            }
+
             $existing->update($attributes);
 
             return $existing;

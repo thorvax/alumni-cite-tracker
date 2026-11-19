@@ -12,6 +12,8 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            /** Set when a graduate is logged in with the alumni login. */
+            alumni: { last_name: string | null } | null;
             [key: string]: unknown;
         };
     }

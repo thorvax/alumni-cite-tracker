@@ -30,7 +30,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->except(['destroy']);
 
     Route::get('search', SearchController::class)->name('search');
-    Route::get('reports', ReportController::class)->name('reports');
+    Route::get('reports', [ReportController::class, 'index'])->name('reports');
+    Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
 
     Route::get('settings/system', [SettingsController::class, 'show'])->name('admin.settings');
     Route::patch('settings/system/account', [SettingsController::class, 'updateAccount'])->name('admin.settings.account');
