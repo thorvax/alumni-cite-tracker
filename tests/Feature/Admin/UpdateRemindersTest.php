@@ -126,3 +126,63 @@ it('saves the update reminder settings from the admin Settings page', function (
         ->patch('/settings/system/update-reminders', ['enabled' => true, 'months' => 3])
         ->assertSessionHasErrors(['months' => 'Choose every 6 or every 12 months.']);
 });
+
+it('sends update reminders to everyone due from the Settings button, even when switched off', function () {
+    Queue::fake();
+    AppSetting::set('update_reminder_enabled', false);
+    AppSetting::set('reminder_hour', ((int) now()->format('G') + 5) % 24); // not the chosen hour
+    answeredOn(now()->subYear());
+    answeredOn(now()->subYear());
+    answeredOn(now()->subMonth()); // not due
+
+    $this->actingAs(User::factory()->create())
+        ->post('/settings/system/update-reminders/send')
+        ->assertRedirect()
+        ->assertSessionHas('status', 'Queued 2 update reminder(s).');
+
+    Queue::assertPushed(SendUpdateReminder::class, 2);
+});
+
+it('sends one graduate an update reminder from Graduate Details', function () {
+    Queue::fake();
+    $admin = User::factory()->create();
+    $graduate = answeredOn(now()->subMonth()); // reminded by hand even if not due yet
+
+    $this->actingAs($admin)
+        ->get("/graduates/{$graduate->id}")
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('updateReminder.can', true)
+            ->where('updateReminder.last', null));
+
+    $this->actingAs($admin)
+        ->post("/graduates/{$graduate->id}/update-reminder")
+        ->assertSessionHas('status', 'Update reminder queued for this graduate.');
+
+    Queue::assertPushed(SendUpdateReminder::class, fn (SendUpdateReminder $job) => $job->graduateId === $graduate->id);
+
+    // Recorded, so the automatic schedule waits a full period.
+    expect($graduate->fresh()->last_update_reminder_at)->not->toBeNull()
+        ->and((new UpdateReminderService)->due()->count())->toBe(0);
+});
+
+it('does not send an update reminder to someone who cannot get one', function (array $attributes) {
+    Queue::fake();
+    $graduate = Graduate::factory()->invited()->create($attributes);
+
+    $this->actingAs(User::factory()->create())
+        ->post("/graduates/{$graduate->id}/update-reminder")
+        ->assertSessionHas('status');
+
+    Queue::assertNothingPushed();
+})->with([
+    'not answered yet' => [['survey_completed_at' => null]],
+    'no email' => [['survey_completed_at' => now(), 'email' => null]],
+    'demo data' => [['survey_completed_at' => now(), 'is_demo' => true]],
+]);
+
+it('keeps the manual send buttons behind the admin login', function () {
+    $graduate = answeredOn(now()->subYear());
+
+    $this->post('/settings/system/update-reminders/send')->assertRedirect('/login');
+    $this->post("/graduates/{$graduate->id}/update-reminder")->assertRedirect('/login');
+});

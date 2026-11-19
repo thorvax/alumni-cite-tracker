@@ -1,5 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
-import { Printer, User } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Mail, Printer, User } from 'lucide-react';
 import { useState } from 'react';
 import AdminLayout from '@/layouts/admin-layout';
 
@@ -21,9 +21,17 @@ type Props = {
         updated_at: string | null;
     };
     sections: Section[];
+    /** Manual "please update your answers" email. */
+    updateReminder?: { can: boolean; last: string | null };
+    flash?: string | null;
 };
 
-export default function ShowGraduate({ graduate, sections }: Props) {
+export default function ShowGraduate({
+    graduate,
+    sections,
+    updateReminder,
+    flash,
+}: Props) {
     const [activeKey, setActiveKey] = useState(sections[0]?.key ?? 'personal');
     const active = sections.find((s) => s.key === activeKey) ?? sections[0];
 
@@ -41,6 +49,27 @@ export default function ShowGraduate({ graduate, sections }: Props) {
                         <Link href="/graduates" className="ad-btn">
                             ← Back
                         </Link>
+                        {updateReminder?.can && (
+                            <button
+                                type="button"
+                                className="ad-btn"
+                                title={
+                                    updateReminder.last
+                                        ? `Last update reminder: ${updateReminder.last}`
+                                        : 'No update reminder sent yet'
+                                }
+                                onClick={() =>
+                                    router.post(
+                                        `/graduates/${graduate.id}/update-reminder`,
+                                        {},
+                                        { preserveScroll: true },
+                                    )
+                                }
+                            >
+                                <Mail size={14} aria-hidden /> Send update
+                                reminder
+                            </button>
+                        )}
                         <button
                             type="button"
                             className="ad-btn"
@@ -58,6 +87,17 @@ export default function ShowGraduate({ graduate, sections }: Props) {
                 }
             >
                 <PrintRecord graduate={graduate} sections={sections} />
+
+                {(flash || updateReminder?.last) && (
+                    <p
+                        className="ad-sub ad-screen-only"
+                        style={{ margin: '0 0 14px' }}
+                        role="status"
+                    >
+                        {flash ??
+                            `Last update reminder sent: ${updateReminder?.last}`}
+                    </p>
+                )}
 
                 <div className="ad-split ad-screen-only">
                     <div>

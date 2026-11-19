@@ -31,10 +31,23 @@ class SettingsController extends Controller
                 'enabled' => AppSetting::flag('update_reminder_enabled', false),
                 'months' => UpdateReminderService::months(),
                 'monthOptions' => UpdateReminderService::MONTH_OPTIONS,
+                'target' => UpdateReminderService::target(),
                 'hour' => (int) AppSetting::value('reminder_hour', 8),
                 'due' => $updates->due()->count(),
             ],
+            'flash' => $request->session()->get('status'),
         ]);
+    }
+
+    /**
+     * "Send update reminders now": everyone who is due, even when the automatic
+     * reminders are off or it is not the chosen hour.
+     */
+    public function sendUpdateReminders(UpdateReminderService $updates): RedirectResponse
+    {
+        $count = $updates->queueDue();
+
+        return back()->with('status', "Queued {$count} update reminder(s).");
     }
 
     /**
@@ -45,12 +58,17 @@ class SettingsController extends Controller
         $data = $request->validate([
             'enabled' => ['required', 'boolean'],
             'months' => ['required', 'integer', Rule::in(UpdateReminderService::MONTH_OPTIONS)],
+            'target' => ['sometimes', 'required', Rule::in(UpdateReminderService::TARGETS)],
         ], [
             'months.in' => 'Choose every 6 or every 12 months.',
+            'target.in' => 'Choose who to remind.',
         ]);
 
         AppSetting::set('update_reminder_enabled', (bool) $data['enabled']);
         AppSetting::set('update_reminder_months', (int) $data['months']);
+        if (isset($data['target'])) {
+            AppSetting::set('update_reminder_target', $data['target']);
+        }
 
         return back();
     }

@@ -1513,3 +1513,25 @@
         color: var(--ad-muted);
     }
 }
+
+/* ---------- small helpers: 2-column field, links in notes ---------- */
+.ad-span-2 {
+    grid-column: span 2;
+}
+.ad-sub a,
+.ad-note a {
+    color: var(--ad-link);
+}
+@media (max-width: 900px) {
+    .ad-span-2 {
+        grid-column: auto;
+    }
+}
+
+/* ---------- Update Status badges (text says the status too) ---------- */
+.ad-badge-up_to_date {
+    color: var(--ad-ok);
+}
+.ad-badge-needs_update {
+    color: var(--ad-error);
+}

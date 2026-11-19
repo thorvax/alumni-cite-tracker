@@ -27,6 +27,7 @@ use Illuminate\Support\Str;
  * @property CarbonImmutable|null $last_update_reminder_at
  * @property string|null $password
  * @property array<string, array<string, mixed>>|null $survey Answers keyed by step slug.
+ * @property list<string>|null $survey_changes Survey parts changed in the last update ([] = no changes, null = never updated).
  */
 class Graduate extends Authenticatable
 {
@@ -70,6 +71,7 @@ class Graduate extends Authenticatable
         'last_reminded_at',
         'survey_completed_at',
         'survey_updated_at',
+        'survey_changes',
     ];
 
     protected $hidden = [
@@ -95,6 +97,7 @@ class Graduate extends Authenticatable
             'password' => 'hashed',
             'is_demo' => 'boolean',
             'last_update_reminder_at' => 'datetime',
+            'survey_changes' => 'array',
         ];
     }
 
@@ -287,6 +290,7 @@ class Graduate extends Authenticatable
             if ($existing->survey_completed_at !== null) {
                 $attributes['survey_completed_at'] = $existing->survey_completed_at;
                 $attributes['survey_updated_at'] = now();
+                $attributes['survey_changes'] = self::changedParts((array) $existing->survey, $answers);
             }
 
             $existing->update($attributes);
@@ -295,6 +299,67 @@ class Graduate extends Authenticatable
         }
 
         return self::create($attributes);
+    }
+
+    /** Survey steps and how they are named in "Changed: ...". */
+    public const SURVEY_PARTS = [
+        'general-information' => 'Personal Information',
+        'educational-background' => 'Educational Background',
+        'trainings' => 'Trainings / Further Studies',
+        'employment-data' => 'Employment Data',
+        'first-current-job' => 'First / Current Job',
+        'need-help' => 'Help Needed',
+        'referral-submit' => 'Referrals',
+    ];
+
+    /**
+     * Which survey parts are different between the old and the new answers.
+     * Ticks that are not data (certify, privacy), blanks, the order of ticked
+     * choices and 2023 vs "2023" do not count as changes.
+     *
+     * @param  array<string, mixed>  $old
+     * @param  array<string, mixed>  $new
+     * @return list<string>
+     */
+    public static function changedParts(array $old, array $new): array
+    {
+        $changed = [];
+
+        foreach (self::SURVEY_PARTS as $step => $title) {
+            $before = self::comparable(array_diff_key((array) ($old[$step] ?? []), ['certify' => true, 'privacy' => true]));
+            $after = self::comparable(array_diff_key((array) ($new[$step] ?? []), ['certify' => true, 'privacy' => true]));
+
+            if ($before !== $after) {
+                $changed[] = $title;
+            }
+        }
+
+        return $changed;
+    }
+
+    private static function comparable(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            $items = array_filter(
+                array_map(fn ($item) => self::comparable($item), $value),
+                fn ($item) => $item !== null && $item !== [],
+            );
+
+            if (array_is_list($value)) {
+                $items = array_values($items);
+                sort($items);
+            } else {
+                ksort($items);
+            }
+
+            return $items;
+        }
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return is_bool($value) ? ($value ? '1' : '0') : (is_scalar($value) ? trim((string) $value) : null);
     }
 
     /**

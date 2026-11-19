@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\GraduateRequest;
 use App\Models\Graduate;
 use App\Services\InvitationService;
+use App\Services\UpdateReminderService;
 use App\Support\GraduateSections;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,7 +66,7 @@ class GraduateController extends Controller
         return to_route('graduates.show', $graduate);
     }
 
-    public function show(Graduate $graduate): Response
+    public function show(Request $request, Graduate $graduate, UpdateReminderService $updates): Response
     {
         return Inertia::render('admin/graduates/show', [
             'graduate' => [
@@ -80,7 +81,27 @@ class GraduateController extends Controller
                 'updated_at' => $graduate->survey_updated_at?->format('F j, Y'),
             ],
             'sections' => GraduateSections::for($graduate),
+            // "Send update reminder" (answered, has an email and a link, not demo data).
+            'updateReminder' => [
+                'can' => $updates->canRemind($graduate),
+                'last' => $graduate->last_update_reminder_at?->format('F j, Y g:i A'),
+            ],
+            'flash' => $request->session()->get('status'),
         ]);
+    }
+
+    /**
+     * Emails this graduate a "please update your answers" reminder now, by hand.
+     */
+    public function sendUpdateReminder(Graduate $graduate, UpdateReminderService $updates): RedirectResponse
+    {
+        if (! $updates->canRemind($graduate)) {
+            return back()->with('status', 'This graduate cannot be sent an update reminder (they need to have answered, with an email and a survey link).');
+        }
+
+        $updates->queue($graduate);
+
+        return back()->with('status', 'Update reminder queued for this graduate.');
     }
 
     public function edit(Graduate $graduate): Response
