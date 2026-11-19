@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\GraduateRequest;
 use App\Models\Graduate;
+use App\Services\InvitationService;
 use App\Support\GraduateSections;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,9 +52,15 @@ class GraduateController extends Controller
         return Inertia::render('admin/graduates/create');
     }
 
-    public function store(GraduateRequest $request): RedirectResponse
+    public function store(GraduateRequest $request, InvitationService $invitations): RedirectResponse
     {
-        $graduate = Graduate::create($request->validated());
+        $graduate = Graduate::create($request->safe()->except('send_invite'));
+        $this->giveSurveyLink($graduate);
+
+        // "Email the survey link now" (ticked by default on Add Graduate).
+        if ($request->boolean('send_invite') && $graduate->invite_token !== null && filled($graduate->email)) {
+            $invitations->queue($graduate);
+        }
 
         return to_route('graduates.show', $graduate);
     }
@@ -85,14 +93,37 @@ class GraduateController extends Controller
                 'region' => $graduate->region,
                 'province' => $graduate->province,
                 'city' => $graduate->city,
+                'student_id' => $graduate->student_id,
+                'last_name' => $graduate->last_name,
+                'course' => $graduate->course,
+                'year_graduated' => $graduate->year_graduated !== null ? (string) $graduate->year_graduated : null,
+                'employment_status' => $graduate->employment_status,
             ],
+            // Already has a personal survey link (uploaded, or given a Student ID before).
+            'hasLink' => $graduate->invite_token !== null,
         ]);
     }
 
     public function update(GraduateRequest $request, Graduate $graduate): RedirectResponse
     {
-        $graduate->update($request->validated());
+        $graduate->update($request->safe()->except('send_invite'));
+        $this->giveSurveyLink($graduate);
 
         return to_route('graduates.show', $graduate);
+    }
+
+    /**
+     * A graduate with a Student ID gets a personal survey link, the same as a
+     * bulk upload: they then appear on the Bulk Upload page (email status,
+     * Resend, reminders) and can activate an alumni account.
+     */
+    private function giveSurveyLink(Graduate $graduate): void
+    {
+        if (filled($graduate->student_id) && $graduate->invite_token === null) {
+            $graduate->forceFill([
+                'invite_token' => Str::random(48),
+                'invite_status' => 'pending',
+            ])->save();
+        }
     }
 }
