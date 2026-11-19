@@ -163,6 +163,22 @@ it('shows a graduate with all profile sections', function () {
             ->where('sections.0.key', 'personal'));
 });
 
+it('sends the details the printed record needs', function () {
+    $graduate = Graduate::factory()->invited()->create([
+        'student_id' => '20244012',
+        'course' => 'Bachelor of Science in Information and Technology',
+        'survey_completed_at' => '2026-03-01 10:00:00',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->get("/graduates/{$graduate->id}")
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('graduate.student_id', '20244012')
+            ->where('graduate.course_name', 'Bachelor of Science in Information and Technology')
+            ->where('graduate.answered_at', 'March 1, 2026')
+            ->where('graduate.updated_at', null));
+});
+
 it('builds report numbers for a year', function () {
     Graduate::factory()->count(3)->create(['year_graduated' => 2023, 'employment_status' => 'Employed']);
     Graduate::factory()->create(['year_graduated' => 2022, 'employment_status' => 'Unemployed']);

@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { User } from 'lucide-react';
+import { Printer, User } from 'lucide-react';
 import { useState } from 'react';
 import AdminLayout from '@/layouts/admin-layout';
 
@@ -15,6 +15,10 @@ type Props = {
         name: string;
         course: string | null;
         year: number | null;
+        student_id: string | null;
+        course_name: string | null;
+        answered_at: string | null;
+        updated_at: string | null;
     };
     sections: Section[];
 };
@@ -37,6 +41,13 @@ export default function ShowGraduate({ graduate, sections }: Props) {
                         <Link href="/graduates" className="ad-btn">
                             ← Back
                         </Link>
+                        <button
+                            type="button"
+                            className="ad-btn"
+                            onClick={() => window.print()}
+                        >
+                            <Printer size={14} aria-hidden /> Print
+                        </button>
                         <Link
                             href={`/graduates/${graduate.id}/edit`}
                             className="ad-btn ad-btn-solid"
@@ -46,7 +57,9 @@ export default function ShowGraduate({ graduate, sections }: Props) {
                     </>
                 }
             >
-                <div className="ad-split">
+                <PrintRecord graduate={graduate} sections={sections} />
+
+                <div className="ad-split ad-screen-only">
                     <div>
                         <section className="ad-card ad-profile">
                             <div className="ad-avatar">
@@ -109,5 +122,60 @@ export default function ShowGraduate({ graduate, sections }: Props) {
                 </div>
             </AdminLayout>
         </>
+    );
+}
+
+/**
+ * The whole record, all sections at once. Hidden on screen; this is what
+ * the Print button prints (see @media print in admin.css).
+ */
+function PrintRecord({ graduate, sections }: Props) {
+    const details: [string, string | number | null][] = [
+        ['Name', graduate.name],
+        ['Student ID Number', graduate.student_id],
+        ['Course', graduate.course_name],
+        ['Year Graduated', graduate.year],
+        ['Survey answered', graduate.answered_at],
+        ['Last updated', graduate.updated_at],
+    ];
+
+    return (
+        <article className="ad-print-record">
+            <header className="ad-print-head">
+                <p>
+                    College of Information and Technology Education, Urdaneta
+                    City University
+                </p>
+                <h2>CITE Graduate Tracer Study: Graduate Record</h2>
+                <dl className="ad-kv">
+                    {details.map(([label, value]) => (
+                        <div key={label}>
+                            <dt>{label}</dt>
+                            <dd>{value ?? '—'}</dd>
+                        </div>
+                    ))}
+                </dl>
+            </header>
+
+            {sections.map((section) => (
+                <section key={section.key} className="ad-print-section">
+                    <h3>{section.title}</h3>
+                    <dl className="ad-kv">
+                        {section.rows.map((row) => (
+                            <div key={row.label}>
+                                <dt>{row.label}</dt>
+                                <dd>{row.value}</dd>
+                            </div>
+                        ))}
+                    </dl>
+                </section>
+            ))}
+
+            <footer className="ad-print-foot">
+                Printed {new Date().toLocaleDateString()}. Confidential:
+                contains personal data protected under the Data Privacy Act of
+                2012 (RA 10173).
+            </footer>
+        </article>
     );
 }

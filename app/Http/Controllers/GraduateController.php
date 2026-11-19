@@ -73,6 +73,11 @@ class GraduateController extends Controller
                 'name' => $graduate->full_name,
                 'course' => $graduate->courseCode(),
                 'year' => $graduate->year_graduated,
+                // For the printed record.
+                'student_id' => $graduate->student_id,
+                'course_name' => $graduate->course,
+                'answered_at' => $graduate->survey_completed_at?->format('F j, Y'),
+                'updated_at' => $graduate->survey_updated_at?->format('F j, Y'),
             ],
             'sections' => GraduateSections::for($graduate),
         ]);
