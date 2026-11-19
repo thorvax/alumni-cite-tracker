@@ -3,10 +3,25 @@ export const SURVEY_STEPS = [
     { slug: 'educational-background', label: 'B. Educational Background' },
     { slug: 'trainings', label: 'C. Trainings & Advance Studies' },
     { slug: 'employment-data', label: 'D. Employment Data' },
-    { slug: 'job-details', label: 'D. Job Details' },
     { slug: 'first-current-job', label: 'D. First / Current Job' },
+    { slug: 'need-help', label: 'D. Need Help Landing a Job' },
     { slug: 'referral-submit', label: 'Referral & Submit' },
 ] as const;
+
+export type StepSlug = (typeof SURVEY_STEPS)[number]['slug'];
+
+/**
+ * The steps this person will see. The job form is only for people who are
+ * employed; once they answer No or Never Employed it is skipped.
+ */
+export function stepsFor(employed: string | null | undefined) {
+    return SURVEY_STEPS.filter(
+        (step) =>
+            step.slug !== 'first-current-job' ||
+            !employed ||
+            employed === 'yes',
+    );
+}
 
 export const stepUrl = (slug: string) => `/survey/${slug}`;
 

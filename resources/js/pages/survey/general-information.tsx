@@ -16,6 +16,7 @@ type Data = {
     first_name: string;
     middle_name: string;
     last_name: string;
+    email: string;
     civil_status: string;
     sex: string;
     birth_date: string;
@@ -32,6 +33,7 @@ const defaults: Data = {
     first_name: '',
     middle_name: '',
     last_name: '',
+    email: '',
     civil_status: '',
     sex: '',
     birth_date: '',
@@ -46,8 +48,10 @@ const defaults: Data = {
 
 export default function GeneralInformation({
     draft,
+    invite,
 }: {
     draft: Partial<Data>;
+    invite?: { student_id?: string } | null;
 }) {
     const { data, setData, post, processing, errors } = useForm<Data>(
         withDefaults(defaults, draft),
@@ -63,11 +67,10 @@ export default function GeneralInformation({
             <Head title="General Information" />
 
             <SurveyLayout
-                step={1}
+                slug="general-information"
                 page="general"
                 title="A. General Information"
                 description="Please provide your personal details."
-                backHref="/"
                 processing={processing}
             >
                 <form
@@ -122,6 +125,32 @@ export default function GeneralInformation({
                             }
                         />
                     </Field>
+
+                    <Field
+                        id="email"
+                        label="Email Address"
+                        required
+                        error={errors.email}
+                    >
+                        <TextInput
+                            id="email"
+                            type="email"
+                            autoComplete="email"
+                            placeholder="e.g. juan@gmail.com"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                        />
+                    </Field>
+
+                    {invite?.student_id && (
+                        <Field id="student_id" label="Student ID Number">
+                            <TextInput
+                                id="student_id"
+                                readOnly
+                                value={invite.student_id}
+                            />
+                        </Field>
+                    )}
 
                     <Field
                         id="civil_status"

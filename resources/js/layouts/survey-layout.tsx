@@ -1,32 +1,40 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Check } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
 import { CiteLogo, CollegeCredit } from '@/components/cite-logo';
 import ThemeToggle from '@/components/survey/theme-toggle';
-import { SURVEY_STEPS, stepUrl } from '@/lib/survey';
+import { type StepSlug, stepUrl, stepsFor } from '@/lib/survey';
 
 export const SURVEY_FORM_ID = 'survey-form';
 
 type Props = PropsWithChildren<{
-    step: number; // 1-based
+    slug: StepSlug;
     page: string; // picks the light-mode palette in survey.css
     title: string;
     description?: string;
-    backHref: string;
     processing?: boolean;
     submitLabel?: string;
+    /** Live answer to "presently employed?" (the server sends the saved one). */
+    employed?: string | null;
 }>;
 
 export default function SurveyLayout({
-    step,
+    slug,
     page,
     title,
     description,
-    backHref,
     processing = false,
     submitLabel = 'Next →',
+    employed,
     children,
 }: Props) {
+    const { props } = usePage<{ employed?: string | null }>();
+
+    const steps = stepsFor(employed !== undefined ? employed : props.employed);
+    const step = steps.findIndex((s) => s.slug === slug) + 1;
+    const previous = steps[step - 2];
+    const backHref = previous ? stepUrl(previous.slug) : '/';
+
     return (
         <div className="sv" data-page={page}>
             <aside className="sv-side">
@@ -36,7 +44,7 @@ export default function SurveyLayout({
                     </div>
 
                     <ol className="sv-steps" aria-label="Survey steps">
-                        {SURVEY_STEPS.map((s, i) => {
+                        {steps.map((s, i) => {
                             const number = i + 1;
                             const done = number < step;
                             const content = (

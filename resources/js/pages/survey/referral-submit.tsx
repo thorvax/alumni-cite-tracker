@@ -33,11 +33,10 @@ export default function ReferralSubmit({ draft }: { draft: Partial<Data> }) {
             <Head title="Referral & Submit" />
 
             <SurveyLayout
-                step={7}
+                slug="referral-submit"
                 page="done"
                 title="Referral & Submit"
                 description="Please refer your classmates and review before submitting."
-                backHref={stepUrl('first-current-job')}
                 processing={processing}
                 submitLabel="Submit"
             >

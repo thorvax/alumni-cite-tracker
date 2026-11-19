@@ -1,114 +1,117 @@
-import { Form, Head } from '@inertiajs/react';
-import InputError from '@/components/input-error';
-import PasswordInput from '@/components/password-input';
-import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import { register } from '@/routes';
-import { store } from '@/routes/login';
-import { request } from '@/routes/password';
+import { Head, Link, useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+import ThemeToggle from '@/components/survey/theme-toggle';
 
 type Props = {
     status?: string;
-    canResetPassword: boolean;
+    canResetPassword?: boolean;
 };
 
-export default function Login({ status, canResetPassword }: Props) {
+export default function Login({ status }: Props) {
+    const { data, setData, post, processing, errors } = useForm({
+        email: '',
+        password: '',
+        remember: false,
+    });
+
+    const submit = (e: FormEvent) => {
+        e.preventDefault();
+        post('/login');
+    };
+
     return (
         <>
-            <Head title="Log in" />
+            <Head title="Sign in" />
 
-            <Form
-                {...store.form()}
-                resetOnSuccess={['password']}
-                className="flex flex-col gap-6"
-            >
-                {({ processing, errors }) => (
-                    <>
-                        <div className="grid gap-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    required
-                                    autoFocus
-                                    tabIndex={1}
-                                    autoComplete="email"
-                                    placeholder="email@example.com"
+            <div className="lg">
+                <section className="lg-left">
+                    <img src="/images/ucu-cite-logo.png" alt="UCU CITE seal" />
+                    <div className="lg-brand">UCU | CITE</div>
+                    <p>Graduate Tracer System</p>
+                    <p>College of Information and Technology Education</p>
+                    <p>Urdaneta City University</p>
+                </section>
+
+                <section
+                    className="lg-right"
+                    style={{
+                        backgroundImage:
+                            "var(--lg-overlay), url('/images/ucu-cite.jpg')",
+                    }}
+                >
+                    <ThemeToggle className="lg-toggle" />
+
+                    <form className="lg-form" onSubmit={submit} noValidate>
+                        <h1 className="lg-title">Welcome Back</h1>
+                        <p className="lg-sub">Sign in</p>
+
+                        {status && <p className="lg-status">{status}</p>}
+
+                        <label className="lg-label" htmlFor="email">
+                            Email Address
+                        </label>
+                        <input
+                            id="email"
+                            type="email"
+                            autoComplete="email"
+                            className="lg-input"
+                            placeholder="Enter your email"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            autoFocus
+                        />
+                        {errors.email && (
+                            <p className="lg-error" role="alert">
+                                {errors.email}
+                            </p>
+                        )}
+
+                        <label className="lg-label" htmlFor="password">
+                            Password
+                        </label>
+                        <input
+                            id="password"
+                            type="password"
+                            autoComplete="current-password"
+                            className="lg-input"
+                            placeholder="Enter your password"
+                            value={data.password}
+                            onChange={(e) =>
+                                setData('password', e.target.value)
+                            }
+                        />
+                        {errors.password && (
+                            <p className="lg-error" role="alert">
+                                {errors.password}
+                            </p>
+                        )}
+
+                        <div className="lg-row">
+                            <label className="lg-remember">
+                                <input
+                                    type="checkbox"
+                                    checked={data.remember}
+                                    onChange={(e) =>
+                                        setData('remember', e.target.checked)
+                                    }
                                 />
-                                <InputError message={errors.email} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
-                                    {canResetPassword && (
-                                        <TextLink
-                                            href={request()}
-                                            className="ml-auto text-sm"
-                                            tabIndex={5}
-                                        >
-                                            Forgot your password?
-                                        </TextLink>
-                                    )}
-                                </div>
-                                <PasswordInput
-                                    id="password"
-                                    name="password"
-                                    required
-                                    tabIndex={2}
-                                    autoComplete="current-password"
-                                    placeholder="Password"
-                                />
-                                <InputError message={errors.password} />
-                            </div>
-
-                            <div className="flex items-center space-x-3">
-                                <Checkbox
-                                    id="remember"
-                                    name="remember"
-                                    tabIndex={3}
-                                />
-                                <Label htmlFor="remember">Remember me</Label>
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="mt-4 w-full"
-                                tabIndex={4}
-                                disabled={processing}
-                                data-test="login-button"
-                            >
-                                {processing && <Spinner />}
-                                Log in
-                            </Button>
+                                Remember me
+                            </label>
+                            <Link href="/forgot-password">
+                                Forgot password?
+                            </Link>
                         </div>
 
-                        <div className="text-center text-sm text-muted-foreground">
-                            Don't have an account?{' '}
-                            <TextLink href={register()} tabIndex={5}>
-                                Sign up
-                            </TextLink>
-                        </div>
-                    </>
-                )}
-            </Form>
-
-            {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
+                        <button
+                            type="submit"
+                            className="lg-btn"
+                            disabled={processing}
+                        >
+                            Sign In
+                        </button>
+                    </form>
+                </section>
+            </div>
         </>
     );
 }
-
-Login.layout = {
-    title: 'Log in to your account',
-    description: 'Enter your email and password below to log in',
-};

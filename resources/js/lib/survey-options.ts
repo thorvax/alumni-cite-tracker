@@ -29,9 +29,9 @@ export const civilStatuses = [
 ];
 
 export const courses = [
-    'Bachelor of Science in Information Technology',
-    'Bachelor of Science in Computer Science',
-    'Bachelor of Science in Information Systems',
+    'Associate in Computer Technology',
+    'Bachelor of Library in Information Science',
+    'Bachelor of Science in Information and Technology',
 ];
 
 const thisYear = new Date().getFullYear();
@@ -119,38 +119,45 @@ export const sectors = [
 ];
 
 export const businessLines = [
-    'Agriculture, Forestry and Fishing',
-    'Mining and Quarrying',
+    'Information Technology',
     'Manufacturing',
-    'Electricity, Gas, Steam and Air-conditioning Supply',
-    'Water Supply, Sewerage and Waste Management',
+    'Agriculture, Hunting and Forestry',
+    'Fishing',
+    'Mining and Quarrying',
+    'Librarian',
+    'Electricity, Gas and Water Supply',
     'Construction',
-    'Wholesale and Retail Trade',
-    'Transportation and Storage',
-    'Accommodation and Food Service Activities',
-    'Information and Communication',
-    'Financial and Insurance Activities',
-    'Real Estate Activities',
-    'Professional, Scientific and Technical Activities',
-    'Administrative and Support Service Activities',
-    'Public Administration and Defense',
+    'Wholesale and Retail Trade, repair of motor vehicles, motorcycles and personal and household goods',
+    'Hotels and Restaurants',
+    'Transport Storage and Communication',
+    'Financial Intermediation',
+    'Real Estate, Renting and Business Activities',
+    'Public Administration and Defense; Compulsory, Social Security',
     'Education',
-    'Human Health and Social Work Activities',
-    'Arts, Entertainment and Recreation',
-    'Other Service Activities',
+    'Health and Social Work',
+    'Other Community, Social and Personal Service Activities',
+    'Private Households with Employed Persons',
+    'Extra-territorial Organizations and Bodies',
 ];
 
 export const workLines = [
-    'Managers',
-    'Professionals',
-    'Technicians and Associate Professionals',
-    'Clerical Support Workers',
-    'Service and Sales Workers',
-    'Skilled Agricultural, Forestry and Fishery Workers',
-    'Craft and Related Trades Workers',
-    'Plant and Machine Operators and Assemblers',
-    'Elementary Occupations',
-    'Armed Forces Occupations',
+    'Librarian',
+    'Software Developer',
+    'Cloud Architect',
+    'Web Developer',
+    'Mobile Application Developer',
+    'Data Architect',
+    'Network Administrator',
+    'Systems Administrator',
+    'Database Administrator',
+    'Help Desk/Support Specialist',
+    'Cybersecurity Analyst',
+    'Data Analyst',
+    'Data Scientist',
+    'IT Project Manager',
+    'IT Consultant',
+    'UX/UI Designer',
+    'Other',
 ];
 
 export const placeOfWork = [
@@ -216,5 +223,11 @@ export const competencies = [
     { value: 'it', label: 'Information Technology skills' },
     { value: 'problem_solving', label: 'Problem-solving skills' },
     { value: 'critical_thinking', label: 'Critical Thinking skills' },
+    { value: 'other', label: 'Other', other: true },
+];
+
+/** Turns a plain list into radio choices, plus an "Other:" choice with a text box. */
+export const withOther = (list: string[]) => [
+    ...list.map((value) => ({ value, label: value })),
     { value: 'other', label: 'Other', other: true },
 ];

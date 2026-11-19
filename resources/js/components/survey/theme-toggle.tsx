@@ -4,7 +4,11 @@ import { useAppearance } from '@/hooks/use-appearance';
 
 const subscribe = () => () => {};
 
-export default function ThemeToggle() {
+export default function ThemeToggle({
+    className = 'sv-toggle',
+}: {
+    className?: string;
+}) {
     const { appearance, updateAppearance } = useAppearance();
 
     // false on the server and during hydration, true afterwards. That keeps the
@@ -22,7 +26,7 @@ export default function ThemeToggle() {
                 window.matchMedia('(prefers-color-scheme: dark)').matches));
 
     return (
-        <div className="sv-toggle" role="group" aria-label="Color theme">
+        <div className={className} role="group" aria-label="Color theme">
             <button
                 type="button"
                 aria-label="Light mode"

@@ -42,10 +42,9 @@ export default function Trainings({ draft }: { draft: Partial<Data> }) {
             <Head title="Trainings & Advance Studies" />
 
             <SurveyLayout
-                step={3}
+                slug="trainings"
                 page="training"
                 title="C. Trainings & Advance Studies Attended After College"
-                backHref={stepUrl('educational-background')}
                 processing={processing}
             >
                 <form

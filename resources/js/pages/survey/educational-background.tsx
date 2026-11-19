@@ -1,7 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 import {
-    CheckGroup,
+    RadioGroup,
     Field,
     Question,
     SelectInput,
@@ -20,7 +20,7 @@ import {
 type Data = {
     course: string;
     year_graduated: string;
-    exams: string[];
+    exam: string;
     exam_date: string;
     exam_rating: string;
     reasons_ug: string[];
@@ -30,7 +30,7 @@ type Data = {
 const defaults: Data = {
     course: '',
     year_graduated: '',
-    exams: [],
+    exam: '',
     exam_date: '',
     exam_rating: '',
     reasons_ug: [],
@@ -56,10 +56,9 @@ export default function EducationalBackground({
             <Head title="Educational Background" />
 
             <SurveyLayout
-                step={2}
+                slug="educational-background"
                 page="education"
                 title="B. Educational Background"
-                backHref={stepUrl('general-information')}
                 processing={processing}
             >
                 <form id={SURVEY_FORM_ID} onSubmit={submit} noValidate>
@@ -111,16 +110,24 @@ export default function EducationalBackground({
 
                         <Question
                             label="2.1 Highest Professional Examination / Eligibility Passed"
-                            error={errors.exams}
+                            error={errors.exam}
                         >
-                            <CheckGroup
+                            <RadioGroup
                                 stack
+                                name="exam"
                                 options={exams}
-                                values={data.exams}
-                                onToggle={(value) =>
-                                    setData('exams', toggle(data.exams, value))
-                                }
+                                value={data.exam}
+                                onChange={(value) => setData('exam', value)}
                             />
+                            {data.exam && (
+                                <button
+                                    type="button"
+                                    className="sv-link-btn"
+                                    onClick={() => setData('exam', '')}
+                                >
+                                    Clear selection
+                                </button>
+                            )}
                         </Question>
 
                         <div className="sv-grid" style={{ marginTop: 18 }}>
