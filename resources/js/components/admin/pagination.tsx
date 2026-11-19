@@ -6,22 +6,28 @@ import { pageItems } from '@/lib/admin';
 export default function Pagination({
     current,
     last,
+    param = 'page',
+    label = 'Pagination',
 }: {
     current: number;
     last: number;
+    /** Query string name, when a page has two lists (e.g. "no_email_page"). */
+    param?: string;
+    /** Accessible name, so two paginations on one page can be told apart. */
+    label?: string;
 }) {
     const { url } = usePage();
 
     const hrefFor = (page: number) => {
         const next = new URL(url, 'http://localhost');
-        next.searchParams.set('page', String(page));
+        next.searchParams.set(param, String(page));
 
         return `${next.pathname}${next.search}`;
     };
 
     return (
         <div className="ad-pager">
-            <nav className="ad-pages" aria-label="Pagination">
+            <nav className="ad-pages" aria-label={label}>
                 {pageItems(current, last).map((item, i) =>
                     item === '…' ? (
                         <span key={`gap-${i}`}>…</span>
@@ -41,6 +47,7 @@ export default function Pagination({
             {/* key: the field shows the new page number after every page change */}
             <PageJump
                 key={current}
+                id={`ad-jump-${param}`}
                 current={current}
                 last={last}
                 hrefFor={hrefFor}
@@ -50,10 +57,12 @@ export default function Pagination({
 }
 
 function PageJump({
+    id,
     current,
     last,
     hrefFor,
 }: {
+    id: string;
     current: number;
     last: number;
     hrefFor: (page: number) => string;
@@ -79,9 +88,9 @@ function PageJump({
 
     return (
         <form className="ad-jump" onSubmit={go}>
-            <label htmlFor="ad-jump-page">Go to page</label>
+            <label htmlFor={id}>Go to page</label>
             <input
-                id="ad-jump-page"
+                id={id}
                 className="ad-input"
                 type="number"
                 inputMode="numeric"

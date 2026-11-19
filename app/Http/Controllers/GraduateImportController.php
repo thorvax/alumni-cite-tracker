@@ -42,33 +42,56 @@ class GraduateImportController extends Controller
      * Invitations page: email status of everyone uploaded, Send/Resend, and
      * the "No email address" list.
      */
-    public function invitations(Request $request): Response
+    public function invitations(Request $request): Response|RedirectResponse
     {
         $filter = $request->query('status');
-        $filter = in_array($filter, self::STATUS_FILTERS, true) ? $filter : null;
+        $filter = is_string($filter) && in_array($filter, self::STATUS_FILTERS, true) ? $filter : null;
 
-        $people = Graduate::query()->invited()->latest('id')->get();
-
-        $counts = ['total' => $people->count()];
-
-        foreach ([...self::STATUS_FILTERS, 'no_email'] as $status) {
-            $counts[$status] = $people->filter(fn (Graduate $g) => $g->invitationStatus() === $status)->count();
+        $perPage = $request->integer('per_page', GraduateController::DEFAULT_PER_PAGE);
+        if (! in_array($perPage, GraduateController::PER_PAGE_OPTIONS, true)) {
+            $perPage = GraduateController::DEFAULT_PER_PAGE;
         }
 
-        $withEmail = $people
-            ->filter(fn (Graduate $g) => filled($g->email))
-            ->when($filter, fn ($c) => $c->filter(fn (Graduate $g) => $g->invitationStatus() === $filter));
+        // Counted by the database (not by loading everyone into PHP).
+        $counts = ['total' => Graduate::query()->invited()->count()];
+        foreach ([...self::STATUS_FILTERS, 'no_email'] as $status) {
+            $counts[$status] = Graduate::query()->invited()->invitationStatus($status)->count();
+        }
+
+        // Email status list (people with an email), filtered by status.
+        $recipients = Graduate::query()
+            ->invited()
+            ->withEmail()
+            ->when($filter, fn ($query, string $status) => $query->invitationStatus($status))
+            ->latest('id')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        // "No email address" list: its own page number, so paging one list does not move the other.
+        $noEmail = Graduate::query()
+            ->invited()
+            ->invitationStatus('no_email')
+            ->latest('id')
+            ->paginate($perPage, ['*'], 'no_email_page')
+            ->withQueryString();
+
+        // A page number past the end goes to the last page.
+        if ($recipients->currentPage() > $recipients->lastPage() || $noEmail->currentPage() > $noEmail->lastPage()) {
+            return to_route('graduates.invitations', [
+                ...$request->query(),
+                'page' => min($recipients->currentPage(), $recipients->lastPage()),
+                'no_email_page' => min($noEmail->currentPage(), $noEmail->lastPage()),
+            ]);
+        }
 
         return Inertia::render('admin/graduates/invitations', [
             'flash' => $request->session()->get('status'),
             'counts' => $counts,
             'filter' => $filter,
-            'recipients' => $withEmail->take(300)->map(fn (Graduate $g) => $g->toInvitationRow())->values(),
-            'recipientsHidden' => max(0, $withEmail->count() - 300),
-            'noEmail' => $people
-                ->filter(fn (Graduate $g) => $g->invitationStatus() === 'no_email')
-                ->map(fn (Graduate $g) => $g->toInvitationRow())
-                ->values(),
+            'perPage' => $perPage,
+            'perPageOptions' => GraduateController::PER_PAGE_OPTIONS,
+            'recipients' => $recipients->through(fn (Graduate $g) => $g->toInvitationRow()),
+            'noEmail' => $noEmail->through(fn (Graduate $g) => $g->toInvitationRow()),
         ]);
     }
 

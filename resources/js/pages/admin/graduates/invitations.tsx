@@ -1,7 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import type { RequestPayload } from '@inertiajs/core';
 import { useState } from 'react';
+import Pagination from '@/components/admin/pagination';
 import AdminLayout from '@/layouts/admin-layout';
+import type { Paginated } from '@/lib/admin';
 
 type Recipient = {
     id: number;
@@ -18,10 +20,74 @@ type Props = {
     flash: string | null;
     counts: Record<string, number>;
     filter: string | null;
-    recipients: Recipient[];
-    recipientsHidden: number;
-    noEmail: Recipient[];
+    perPage: number;
+    perPageOptions: number[];
+    /** Email status list (paged with ?page=). */
+    recipients: Paginated<Recipient>;
+    /** "No email address" list (paged with ?no_email_page=). */
+    noEmail: Paginated<Recipient>;
 };
+
+/** /graduates/invitations with a status filter and page size (both lists back to page 1). */
+const listUrl = (status: string | null, perPage: number) => {
+    const params = new URLSearchParams({ per_page: String(perPage) });
+
+    if (status) {
+        params.set('status', status);
+    }
+
+    return `/graduates/invitations?${params.toString()}`;
+};
+
+/** "Show [10] per page" + "Showing 1 to 10 of 42" + page links, under a list. */
+function ListFooter({
+    page,
+    perPage,
+    perPageOptions,
+    onPerPage,
+    param,
+    label,
+}: {
+    page: Paginated<Recipient>;
+    perPage: number;
+    perPageOptions: number[];
+    onPerPage: (perPage: number) => void;
+    param?: string;
+    label: string;
+}) {
+    return (
+        <div className="ad-foot">
+            <div className="ad-foot-info">
+                <label className="ad-perpage">
+                    Show
+                    <select
+                        className="ad-select"
+                        value={perPage}
+                        onChange={(e) => onPerPage(Number(e.target.value))}
+                    >
+                        {perPageOptions.map((option) => (
+                            <option key={option} value={option}>
+                                {option}
+                            </option>
+                        ))}
+                    </select>
+                    per page
+                </label>
+                <span>
+                    Showing {page.from ?? 0} to {page.to ?? 0} of {page.total}
+                </span>
+            </div>
+            {page.last_page > 1 && (
+                <Pagination
+                    current={page.current_page}
+                    last={page.last_page}
+                    param={param}
+                    label={label}
+                />
+            )}
+        </div>
+    );
+}
 
 const STATUS_LABELS: Record<string, string> = {
     pending: 'Pending',
@@ -50,8 +116,9 @@ export default function Invitations({
     flash,
     counts,
     filter,
+    perPage,
+    perPageOptions,
     recipients,
-    recipientsHidden,
     noEmail,
 }: Props) {
     const [emails, setEmails] = useState<Record<number, string>>({});
@@ -123,7 +190,7 @@ export default function Invitations({
 
                         <div className="ad-chips">
                             <Link
-                                href="/graduates/invitations"
+                                href={listUrl(null, perPage)}
                                 className="ad-btn ad-btn-sm"
                                 aria-current={filter === null}
                                 preserveScroll
@@ -133,7 +200,7 @@ export default function Invitations({
                             {FILTERS.map((status) => (
                                 <Link
                                     key={status}
-                                    href={`/graduates/invitations?status=${status}`}
+                                    href={listUrl(status, perPage)}
                                     className="ad-btn ad-btn-sm"
                                     aria-current={filter === status}
                                     preserveScroll
@@ -170,11 +237,11 @@ export default function Invitations({
                                 <span>Action</span>
                             </div>
 
-                            {recipients.length === 0 && (
+                            {recipients.data.length === 0 && (
                                 <p className="ad-empty">No one here yet.</p>
                             )}
 
-                            {recipients.map((person) => (
+                            {recipients.data.map((person) => (
                                 <div key={person.id} className="ad-tr">
                                     <span>{person.student_id}</span>
                                     <span>{person.last_name}</span>
@@ -215,19 +282,25 @@ export default function Invitations({
                                 </div>
                             ))}
                         </div>
-                        {recipientsHidden > 0 && (
-                            <p className="ad-note" style={{ marginTop: 8 }}>
-                                Showing the latest {recipients.length};{' '}
-                                {recipientsHidden} more. Use a filter to narrow
-                                the list.
-                            </p>
-                        )}
+                        <ListFooter
+                            page={recipients}
+                            perPage={perPage}
+                            perPageOptions={perPageOptions}
+                            onPerPage={(size) =>
+                                router.get(
+                                    listUrl(filter, size),
+                                    {},
+                                    { preserveScroll: true },
+                                )
+                            }
+                            label="Email status pages"
+                        />
                     </section>
 
-                    {noEmail.length > 0 && (
+                    {noEmail.total > 0 && (
                         <section className="ad-card">
                             <h2 className="ad-card-title">
-                                No email address ({noEmail.length})
+                                No email address ({noEmail.total})
                             </h2>
                             <p
                                 className="ad-note"
@@ -250,7 +323,7 @@ export default function Invitations({
                                     <span>Email</span>
                                     <span>Action</span>
                                 </div>
-                                {noEmail.map((person) => (
+                                {noEmail.data.map((person) => (
                                     <div
                                         key={person.id}
                                         className="ad-tr"
@@ -314,6 +387,21 @@ export default function Invitations({
                                     Send all ({typedCount})
                                 </button>
                             </div>
+
+                            <ListFooter
+                                page={noEmail}
+                                perPage={perPage}
+                                perPageOptions={perPageOptions}
+                                onPerPage={(size) =>
+                                    router.get(
+                                        listUrl(filter, size),
+                                        {},
+                                        { preserveScroll: true },
+                                    )
+                                }
+                                param="no_email_page"
+                                label="No email address pages"
+                            />
                         </section>
                     )}
                 </div>

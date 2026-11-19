@@ -87,8 +87,8 @@ it('lists a graduate without an email under "No email" on the Invitations page',
     $this->actingAs($this->admin)
         ->get('/graduates/invitations')
         ->assertInertia(fn (Assert $page) => $page
-            ->has('noEmail', 1)
-            ->where('noEmail.0.student_id', '20244012'));
+            ->has('noEmail.data', 1)
+            ->where('noEmail.data.0.student_id', '20244012'));
 });
 
 it('checks the Student ID, Last Name, course and year', function () {
