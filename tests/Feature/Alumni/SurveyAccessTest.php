@@ -2,6 +2,7 @@
 
 use App\Models\Graduate;
 use App\Models\SurveyResponse;
+use Inertia\Testing\AssertableInertia;
 
 it('sends guests from the survey to the alumni login', function (string $url) {
     $this->get($url)->assertRedirect('/alumni/login');
@@ -56,4 +57,12 @@ it('removes unfinished answers when the graduate logs out', function () {
         ->post('/alumni/logout');
 
     expect(session('survey'))->toBeNull();
+});
+
+it('shows the letter to the graduate before step A', function () {
+    loginGraduate();
+
+    $this->get('/survey')
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('survey/intro'));
 });

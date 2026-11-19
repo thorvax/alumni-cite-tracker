@@ -28,12 +28,14 @@ class EditSurveyController extends Controller
         // Saved answers are keyed by step slug, the same shape the survey keeps in the session.
         $answers = Arr::only($graduate->survey, SurveyController::STEPS);
 
-        // They tick these again: the information is true, and they agree to the
-        // Privacy Policy (the consent time saved on submit is then a real, fresh one).
+        // They certify again that the updated information is true. (Older answers
+        // may still hold the step A "privacy" tick; the agreement is now on the letter page.)
         unset($answers['referral-submit']['certify'], $answers['general-information']['privacy']);
 
+        // Replacing the survey session also clears the old agreement, so the
+        // letter page asks them to agree to the Data Privacy Notice again.
         $request->session()->put('survey', $answers);
 
-        return to_route('survey.show', ['step' => SurveyController::STEPS[0]]);
+        return to_route('survey.start');
     }
 }

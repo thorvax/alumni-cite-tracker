@@ -111,7 +111,7 @@ export default function SurveyLayout({
 
                 <footer className="sv-footer">
                     <Link href={privacy()} className="sv-footer-link">
-                        Privacy Policy
+                        Data Privacy Notice
                     </Link>
                     <Link href={backHref} className="sv-btn sv-btn-ghost">
                         ← Back

@@ -32,6 +32,8 @@ function surveyAnswers(array $employment): array
         'trainings' => [],
         'employment-data' => $employment,
         'need-help' => ['help_needed' => 'Interview tips please.'],
+        // Agreed to the Data Privacy Notice on the letter page (the steps need it).
+        'consented_at' => now()->toIso8601String(),
     ];
 }
 
@@ -102,17 +104,17 @@ it('requires the reasons when someone is not employed', function () {
 });
 
 it('requires the first job questions based on the earlier answer', function () {
-    $this->withSession(['survey' => ['employment-data' => ['employed' => 'yes', 'first_job' => 'yes']]])
+    $this->withSession(['survey' => ['consented_at' => now()->toIso8601String(), 'employment-data' => ['employed' => 'yes', 'first_job' => 'yes']]])
         ->post('/survey/first-current-job', ['first_related' => 'yes'])
         ->assertSessionHasErrors(['competencies', 'first_time_to_land', 'first_level', 'first_sector', 'first_how_found', 'first_earning', 'curriculum_relevant']);
 
-    $this->withSession(['survey' => ['employment-data' => ['employed' => 'yes', 'first_job' => 'yes']]])
+    $this->withSession(['survey' => ['consented_at' => now()->toIso8601String(), 'employment-data' => ['employed' => 'yes', 'first_job' => 'yes']]])
         ->post('/survey/first-current-job', ['first_related' => 'no'])
         ->assertSessionHasErrors('curriculum_suggestions');
 });
 
 it('does not open the job form for people who are not employed', function () {
-    $this->withSession(['survey' => ['employment-data' => ['employed' => 'no']]])
+    $this->withSession(['survey' => ['consented_at' => now()->toIso8601String(), 'employment-data' => ['employed' => 'no']]])
         ->get('/survey/first-current-job')
         ->assertRedirect('/survey/need-help');
 });

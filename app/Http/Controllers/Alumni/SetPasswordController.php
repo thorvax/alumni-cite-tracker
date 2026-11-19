@@ -55,7 +55,7 @@ class SetPasswordController extends Controller
         ], [
             'password.required' => 'Please enter a password.',
             'password.confirmed' => 'The two passwords do not match.',
-            'privacy.accepted' => 'Please confirm that you have read and agree to the Privacy Policy.',
+            'privacy.accepted' => 'Please confirm that you have read and agree to the Data Privacy Notice.',
         ]);
 
         $graduate->forceFill([

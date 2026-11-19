@@ -28,7 +28,7 @@ export default function PrivacyConsent({
                             target="_blank"
                             rel="noreferrer"
                         >
-                            Privacy Policy
+                            Data Privacy Notice
                         </a>
                         . *
                     </span>

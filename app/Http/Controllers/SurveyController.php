@@ -7,6 +7,7 @@ use App\Models\SurveyResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\RequiredIf;
 use Inertia\Inertia;
@@ -60,8 +61,29 @@ class SurveyController extends Controller
         'current_level', 'current_sector', 'current_sector_other', 'current_earning',
     ];
 
-    public function start(): RedirectResponse
+    /** Session key: when the graduate agreed to the Data Privacy Notice (before step A). */
+    public const CONSENT_KEY = 'survey.consented_at';
+
+    /**
+     * The letter to the graduate ("Dear Graduate..."), the Data Privacy Notice
+     * and the required "I have read and agree" checkbox, shown before step A.
+     */
+    public function start(Request $request): Response
     {
+        return Inertia::render('survey/intro', [
+            'agreed' => $request->session()->has(self::CONSENT_KEY),
+        ]);
+    }
+
+    /**
+     * The checkbox on the letter page. The survey steps stay closed until it is ticked.
+     */
+    public function consent(Request $request): RedirectResponse
+    {
+        $request->validate(['privacy' => ['accepted']], $this->messages());
+
+        $request->session()->put(self::CONSENT_KEY, now()->toIso8601String());
+
         return to_route('survey.show', ['step' => self::STEPS[0]]);
     }
 
@@ -111,6 +133,11 @@ class SurveyController extends Controller
      */
     private function guard(Request $request, string $step): ?RedirectResponse
     {
+        // Nobody answers before agreeing to the Data Privacy Notice on the letter page.
+        if (! $request->session()->has(self::CONSENT_KEY)) {
+            return to_route('survey.start');
+        }
+
         if ($step !== 'first-current-job') {
             return null;
         }
@@ -175,13 +202,18 @@ class SurveyController extends Controller
         // answering again never adds a second row.
         $saved = Graduate::fromSurvey($answers, $response, $graduate);
 
-        // Step A required "I agree to the Privacy Policy". Record when the
-        // answers (the personal data) were actually given to us.
-        $saved->forceFill(['privacy_consented_at' => now()])->save();
+        // When they ticked "I have read and agree to the Data Privacy Notice" on the letter page.
+        $consentedAt = $request->session()->get(self::CONSENT_KEY);
+        $saved->forceFill([
+            'privacy_consented_at' => is_string($consentedAt) ? Carbon::parse($consentedAt) : now(),
+        ])->save();
 
         foreach (self::STEPS as $slug) {
             $request->session()->forget($this->sessionKey($slug));
         }
+
+        // Answering again (Update my answers) asks for the agreement again.
+        $request->session()->forget(self::CONSENT_KEY);
 
         return to_route('alumni.my-survey')->with('status', 'Thank you! Your answers have been saved.');
     }
@@ -312,7 +344,6 @@ class SurveyController extends Controller
                 'house_no' => ['nullable', 'string', 'max:150'],
                 'mobile_primary' => ['required', ...$mobile],
                 'mobile_secondary' => ['nullable', ...$mobile],
-                'privacy' => ['accepted'],
             ],
 
             'educational-background' => [
@@ -464,7 +495,7 @@ class SurveyController extends Controller
             'competencies.required' => 'Select at least one competency.',
             'curriculum_suggestions.required' => 'Please list your suggestions.',
             'certify.accepted' => 'Please certify that your information is true and correct.',
-            'privacy.accepted' => 'Please confirm that you have read and agree to the Privacy Policy.',
+            'privacy.accepted' => 'Please confirm that you have read and agree to the Data Privacy Notice.',
         ];
     }
 }

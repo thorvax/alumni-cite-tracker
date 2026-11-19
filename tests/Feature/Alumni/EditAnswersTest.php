@@ -31,12 +31,14 @@ it('shows the Update my answers button on My Survey', function () {
 it('opens the survey filled in with the saved answers', function () {
     $this->actingAs($this->graduate, 'graduate')
         ->post('/alumni/my-survey/edit')
-        ->assertRedirect('/survey/general-information');
+        ->assertRedirect('/survey');
+
+    // The letter page asks them to agree to the Data Privacy Notice again.
+    $this->get('/survey/general-information')->assertRedirect('/survey');
+    $this->post('/survey', ['privacy' => true])->assertRedirect('/survey/general-information');
 
     $this->get('/survey/general-information')
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('draft.first_name', 'Juan')
-            ->missing('draft.privacy')); // must be ticked again
+        ->assertInertia(fn (Assert $page) => $page->where('draft.first_name', 'Juan'));
 
     $this->get('/survey/referral-submit')
         ->assertInertia(fn (Assert $page) => $page->missing('draft.certify'));
@@ -51,6 +53,7 @@ it('updates the same record and keeps the first answer date', function () {
     $answers = session('survey');
     $answers['employment-data'] = ['employed' => 'yes', 'employment_status' => 'regular', 'first_job' => 'yes'];
     $answers['first-current-job'] = ['first_related' => 'yes'];
+    $answers['consented_at'] = now()->toIso8601String();
 
     $this->withSession(['survey' => $answers])
         ->post('/survey/referral-submit', ['classmates' => null, 'certify' => true])

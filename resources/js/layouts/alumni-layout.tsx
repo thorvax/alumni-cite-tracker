@@ -52,7 +52,7 @@ export default function AlumniLayout({
                 </main>
 
                 <footer className="sv-auth-footer">
-                    <Link href={privacy()}>Privacy Policy</Link>
+                    <Link href={privacy()}>Data Privacy Notice</Link>
                 </footer>
             </div>
         </div>
