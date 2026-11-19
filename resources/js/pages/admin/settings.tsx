@@ -320,8 +320,11 @@ export default function Settings({
 
                         <p className="ad-sub" style={{ marginTop: 14 }}>
                             Due at the next run (with the saved settings):{' '}
-                            <strong>{updateReminders.due}</strong> alumni. See
-                            who has updated and what changed on{' '}
+                            <strong>{updateReminders.due}</strong> alumni (
+                            <Link href="/graduates/reminders?list=due">
+                                see the list
+                            </Link>
+                            ). See who has updated and what changed on{' '}
                             <Link href="/graduates/updates">Update Status</Link>
                             .
                         </p>
@@ -388,6 +391,12 @@ export default function Settings({
                             >
                                 Send now to {manualCount} alumni
                             </button>
+                            <Link
+                                href={`/graduates/reminders?list=manual&target=${manualForm.data.target}&stale_months=${manualForm.data.stale_months}`}
+                                className="ad-btn"
+                            >
+                                See who
+                            </Link>
                             {flash && (
                                 <span
                                     className="ad-sub"

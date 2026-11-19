@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GraduateController;
 use App\Http\Controllers\GraduateImportController;
+use App\Http\Controllers\GraduateRemindersController;
 use App\Http\Controllers\GraduateUpdatesController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SearchController;
@@ -29,6 +30,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Declared before the resource so "updates" is not read as a graduate id.
     Route::get('graduates/updates', GraduateUpdatesController::class)->name('graduates.updates');
+    Route::get('graduates/reminders', GraduateRemindersController::class)->name('graduates.reminders');
 
     Route::resource('graduates', GraduateController::class)
         ->except(['destroy']);

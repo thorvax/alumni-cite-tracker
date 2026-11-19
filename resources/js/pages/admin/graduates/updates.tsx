@@ -89,6 +89,9 @@ export default function GraduateUpdates({
                         <Link href="/graduates" className="ad-btn">
                             ← Graduates
                         </Link>
+                        <Link href="/graduates/reminders" className="ad-btn">
+                            Reminder List
+                        </Link>
                         <Link href="/settings/system" className="ad-btn">
                             Reminder settings
                         </Link>

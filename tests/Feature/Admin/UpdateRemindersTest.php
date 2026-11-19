@@ -83,15 +83,35 @@ it('sends at the chosen hour when switched on', function () {
     Queue::assertPushed(SendUpdateReminder::class, 1);
 });
 
-it('emails the personal link that opens the login', function () {
+it('emails a link to the alumni login page, not account activation', function () {
     Mail::fake();
     $graduate = answeredOn(now()->subYear());
+    $graduate->forceFill(['activated_at' => now()->subYear(), 'password' => 'Secret123'])->save();
 
     (new SendUpdateReminder($graduate->id))->handle();
 
     Mail::assertSent(UpdateReminderMail::class, function (UpdateReminderMail $mail) use ($graduate) {
+        $html = $mail->render();
+
         return $mail->hasTo($graduate->email)
-            && str_contains($mail->render(), '/survey/start/'.$graduate->invite_token);
+            && str_contains($html, route('alumni.login'))
+            && str_contains($html, 'Log in to update my answers')
+            && ! str_contains($html, '/survey/start/'); // no activation link for activated accounts
+    });
+});
+
+it('also gives the activation link to someone who never activated their account', function () {
+    Mail::fake();
+    $graduate = answeredOn(now()->subYear()); // answered before accounts existed
+
+    (new SendUpdateReminder($graduate->id))->handle();
+
+    Mail::assertSent(UpdateReminderMail::class, function (UpdateReminderMail $mail) use ($graduate) {
+        $html = $mail->render();
+
+        return str_contains($html, route('alumni.login'))
+            && str_contains($html, "Haven't activated your account yet?")
+            && str_contains($html, '/survey/start/'.$graduate->invite_token);
     });
 });
 

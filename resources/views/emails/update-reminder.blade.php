@@ -10,13 +10,20 @@
             Please take a minute to log in and update your answers. It helps the College of Information and Technology Education keep its programs relevant.
         </p>
         <p style="margin:24px 0;">
-            <a href="{{ $link }}" style="display:inline-block;padding:12px 22px;background:#111827;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Update my answers</a>
+            <a href="{{ $link }}" style="display:inline-block;padding:12px 22px;background:#111827;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Log in to update my answers</a>
         </p>
         <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:#4b5563;">
+            Log in with your Student ID Number and password, then open My Survey and choose "Update my answers".
             If the button does not work, copy this link into your browser:<br>
             <a href="{{ $link }}" style="color:#1d4ed8;word-break:break-all;">{{ $link }}</a>
         </p>
-        <p style="margin:0;font-size:13px;line-height:1.5;color:#4b5563;">After logging in, open My Survey and choose "Update my answers". This link is personal to you.</p>
+        @if ($activateLink)
+            <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:#4b5563;">
+                Haven't activated your account yet? Use your personal link first to create your password:<br>
+                <a href="{{ $activateLink }}" style="color:#1d4ed8;word-break:break-all;">{{ $activateLink }}</a>
+            </p>
+        @endif
+        <p style="margin:0;font-size:13px;line-height:1.5;color:#4b5563;">Forgot your password? Use "Forgot password?" on the login page.</p>
     </div>
 </body>
 </html>
