@@ -1088,3 +1088,36 @@ a.sv-step {
     font-weight: 700;
     color: var(--sv-text);
 }
+
+/* ---------- My Survey: all answers (fold-out sections) ---------- */
+.sv-answers {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+}
+.sv-answers details {
+    background: var(--sv-surface);
+    border: 1px solid var(--sv-card-border);
+    border-radius: 8px;
+}
+.sv-answers summary {
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--sv-text);
+    cursor: pointer;
+}
+.sv-answers summary:focus-visible {
+    outline: 2px solid var(--sv-text);
+    outline-offset: 2px;
+}
+.sv-answers details[open] summary {
+    border-bottom: 1px solid var(--sv-card-border);
+}
+.sv-answers .sv-summary {
+    padding: 14px;
+}
+.sv-answers dd {
+    white-space: pre-line;
+}

@@ -28,6 +28,33 @@ it('shows the Update my answers button on My Survey', function () {
             ->where('graduate.can_edit', true));
 });
 
+it('shows every answered question on My Survey, read only', function () {
+    $this->actingAs($this->graduate, 'graduate')
+        ->get('/alumni/my-survey')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('sections.0.key', 'personal')
+            ->where('sections.0.title', 'Personal Information')
+            // Labels, not the saved codes: "advance_study" shows as its readable label.
+            ->where('sections', fn ($sections) => collect($sections)
+                ->flatMap(fn ($section) => $section['rows'])
+                ->contains(fn ($row) => $row['label'] === 'Reasons for Not Being Employed'
+                    && $row['value'] === 'Advance or further study'))
+            // Unanswered questions are left out instead of showing a dash.
+            ->where('sections', fn ($sections) => collect($sections)
+                ->flatMap(fn ($section) => $section['rows'])
+                ->every(fn ($row) => $row['value'] !== '—')));
+});
+
+it('shows no answers before the survey is answered', function () {
+    $this->graduate->update(['survey' => null, 'survey_completed_at' => null]);
+
+    $this->actingAs($this->graduate, 'graduate')
+        ->get('/alumni/my-survey')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('graduate.answered', false)
+            ->where('sections', []));
+});
+
 it('opens the survey filled in with the saved answers', function () {
     $this->actingAs($this->graduate, 'graduate')
         ->post('/alumni/my-survey/edit')
