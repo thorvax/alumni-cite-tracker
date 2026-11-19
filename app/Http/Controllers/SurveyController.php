@@ -196,14 +196,18 @@ class SurveyController extends Controller
         $saved = (array) $request->session()->get($this->sessionKey($step), []);
         $graduate = $this->graduate($request);
 
-        if ($step !== 'general-information' || $graduate === null) {
-            return $saved;
-        }
+        $known = match (true) {
+            $graduate === null => [],
+            $step === 'general-information' => ['last_name' => $graduate->last_name, 'email' => $graduate->email],
+            // Course and Year from the bulk upload (if the admin filled them in).
+            $step === 'educational-background' => [
+                'course' => $graduate->course,
+                'year_graduated' => $graduate->year_graduated !== null ? (string) $graduate->year_graduated : null,
+            ],
+            default => [],
+        };
 
-        return $saved + array_filter([
-            'last_name' => $graduate->last_name,
-            'email' => $graduate->email,
-        ], fn ($value) => filled($value));
+        return $saved + array_filter($known, fn ($value) => filled($value));
     }
 
     /** The logged-in graduate (alumni login), or null for the open survey. */

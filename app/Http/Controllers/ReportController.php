@@ -95,8 +95,12 @@ class ReportController extends Controller
 
         $funnel = $report->responseFunnel();
         $add('Survey progress', 'Uploaded graduates', $funnel['stages']);
-        $add('Survey progress', 'Answered by course', $funnel['answeredByCourse']);
-        $add('Survey progress', 'Answered by year graduated', $funnel['answeredByYear']);
+        // Response rate: Count = answered, Percent = answered / uploaded in that group.
+        foreach (['byCourse' => 'Response rate by course', 'byYear' => 'Response rate by year graduated'] as $key => $title) {
+            foreach ($funnel[$key] as $group) {
+                $rows[] = [$title, $group['label'], "Answered of {$group['uploaded']} uploaded", $group['answered'], $group['percent'].'%'];
+            }
+        }
 
         $name = 'cite-report'
             .($course !== null ? '-'.(Graduate::COURSE_CODES[$course] ?? 'course') : '')

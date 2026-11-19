@@ -126,8 +126,26 @@ it('builds the survey progress funnel for uploaded graduates', function () {
         ->and(collect($funnel['stages'])->pluck('count', 'label')->all())->toBe([
             'Uploaded' => 6, 'With email' => 5, 'Email sent' => 5, 'Answered' => 2,
         ])
-        ->and($funnel['answeredByCourse'])->toBe([['label' => 'BSIT', 'count' => 2, 'percent' => 100]])
-        ->and($funnel['unknown'])->toBe(4);
+        ->and($funnel['byCourse'])->toBe([['label' => 'BSIT', 'uploaded' => 2, 'answered' => 2, 'percent' => 100]])
+        ->and($funnel['noCourse'])->toBe(4)
+        ->and($funnel['noYear'])->toBe(4);
+});
+
+it('shows the response rate per course and year from the upload columns', function () {
+    // Uploaded with Course and Year, not answered yet.
+    Graduate::factory()->count(3)->notAnswered()->create(['course' => BSIT, 'year_graduated' => 2024]);
+    Graduate::factory()->notAnswered()->create(['course' => ACT, 'year_graduated' => 2024]);
+    // Uploaded and answered.
+    Graduate::factory()->invited()->withSurvey()->create(['course' => BSIT, 'year_graduated' => 2024]);
+
+    $funnel = (new GraduateReport)->responseFunnel();
+
+    expect($funnel['byCourse'])->toBe([
+        ['label' => 'ACT', 'uploaded' => 1, 'answered' => 0, 'percent' => 0],
+        ['label' => 'BSIT', 'uploaded' => 4, 'answered' => 1, 'percent' => 25],
+    ])->and($funnel['byYear'])->toBe([
+        ['label' => '2024', 'uploaded' => 5, 'answered' => 1, 'percent' => 20],
+    ])->and($funnel['noCourse'])->toBe(0);
 });
 
 it('applies the course and year filters to every chart', function () {

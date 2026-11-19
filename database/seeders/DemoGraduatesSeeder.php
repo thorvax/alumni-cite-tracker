@@ -24,7 +24,13 @@ class DemoGraduatesSeeder extends Seeder
         Graduate::factory()->count(50)->create($demo);
         Graduate::factory()->count(160)->invited()->withSurvey()->create($demo);
 
-        Graduate::factory()->count(28)->notAnswered()->create($demo);
+        // Uploaded with the optional Course and Year Graduated columns filled in.
+        Graduate::factory()->count(28)->notAnswered()
+            ->state(fn () => [
+                'course' => fake()->randomElement(array_keys(Graduate::COURSE_CODES)),
+                'year_graduated' => fake()->numberBetween(2019, 2023),
+            ])
+            ->create($demo);
         Graduate::factory()->count(6)->notAnswered()->create($demo + ['email' => null, 'invite_status' => 'pending', 'invite_sent_at' => null]);
         Graduate::factory()->count(6)->notAnswered()->create($demo + ['invite_status' => 'failed', 'invite_sent_at' => null]);
     }

@@ -168,9 +168,11 @@ export default function ImportGraduates({
                         <h2 className="ad-card-title">1. Upload a file</h2>
                         <p className="ad-note" style={{ margin: '8px 0 16px' }}>
                             Excel (.xlsx) or CSV with Student ID Number (8
-                            digits, like 20244012), Last Name and Email. Email
-                            can be left blank. Use the template for the right
-                            format.
+                            digits, like 20244012) and Last Name. Optional:
+                            Email, Course (ACT, BLIS or BSIT) and Year Graduated
+                            (like 2024). Course and Year let Reports show the
+                            response rate per course and year. Use the template
+                            for the right format.
                         </p>
 
                         <form className="ad-inline" onSubmit={sendUpload}>

@@ -7,6 +7,7 @@ import {
     ChartCard,
     Donut,
     Funnel,
+    RateList,
     ReportSection,
     StackedBars,
     TextList,
@@ -15,6 +16,7 @@ import {
 import type {
     Breakdown,
     Item,
+    RateRow,
     StackRow,
     TextAnswers,
 } from '@/components/admin/report-charts';
@@ -47,9 +49,10 @@ type Props = {
         uploaded: number;
         rate: { count: number; percent: number };
         stages: Item[];
-        answeredByCourse: Item[];
-        answeredByYear: Item[];
-        unknown: number;
+        byCourse: RateRow[];
+        byYear: RateRow[];
+        noCourse: number;
+        noYear: number;
     };
 };
 
@@ -350,38 +353,35 @@ export default function Reports({
                         <div className="ad-report-split">
                             <div>
                                 <h3 className="ad-chart-sub">
-                                    Answered by course
+                                    Response rate by course
                                 </h3>
-                                {funnel.answeredByCourse.length > 0 ? (
-                                    <BarList items={funnel.answeredByCourse} />
-                                ) : (
-                                    <p className="ad-chart-empty">
-                                        No data yet
+                                <RateList rows={funnel.byCourse} />
+                                {funnel.noCourse > 0 && (
+                                    <p className="ad-chart-note">
+                                        {funnel.noCourse} uploaded without a
+                                        course (not answered yet).
                                     </p>
                                 )}
                             </div>
                             <div>
                                 <h3 className="ad-chart-sub">
-                                    Answered by year graduated
+                                    Response rate by year graduated
                                 </h3>
-                                {funnel.answeredByYear.length > 0 ? (
-                                    <BarList items={funnel.answeredByYear} />
-                                ) : (
-                                    <p className="ad-chart-empty">
-                                        No data yet
+                                <RateList rows={funnel.byYear} />
+                                {funnel.noYear > 0 && (
+                                    <p className="ad-chart-note">
+                                        {funnel.noYear} uploaded without a year
+                                        (not answered yet).
                                     </p>
                                 )}
                             </div>
                         </div>
 
-                        {funnel.unknown > 0 && (
-                            <p className="ad-chart-note">
-                                {funnel.unknown} uploaded graduate(s) have not
-                                answered yet, so their course and year are not
-                                known (Bulk Upload only has Student ID, Last
-                                Name and Email).
-                            </p>
-                        )}
+                        <p className="ad-chart-note">
+                            Tip: fill in the optional Course and Year Graduated
+                            columns when uploading, so everyone is counted here
+                            even before they answer.
+                        </p>
                     </ChartCard>
                 </div>
             </AdminLayout>
