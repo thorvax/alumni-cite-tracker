@@ -326,3 +326,36 @@ export function TextList({
         </div>
     );
 }
+
+/** One group's response rate: answered out of uploaded. */
+export type RateRow = {
+    label: string;
+    uploaded: number;
+    answered: number;
+    percent: number;
+};
+
+/** Response rate per group, e.g. "BSIT: 8 of 20 answered (40%)". */
+export function RateList({ rows }: { rows: RateRow[] }) {
+    if (rows.length === 0) {
+        return <p className="ad-chart-empty">No data yet</p>;
+    }
+
+    return (
+        <ul className="ad-barlist">
+            {rows.map((row) => (
+                <li key={row.label}>
+                    <div className="ad-barlist-head">
+                        <span>{row.label}</span>
+                        <span className="ad-faint">
+                            {row.answered} of {row.uploaded} ({row.percent}%)
+                        </span>
+                    </div>
+                    <div className="ad-bar" aria-hidden>
+                        <i style={{ width: `${row.percent}%` }} />
+                    </div>
+                </li>
+            ))}
+        </ul>
+    );
+}

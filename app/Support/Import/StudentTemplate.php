@@ -18,13 +18,15 @@ final class StudentTemplate
         $options->setColumnWidth(24, 1);
         $options->setColumnWidth(28, 2);
         $options->setColumnWidth(38, 3);
+        $options->setColumnWidth(14, 4);
+        $options->setColumnWidth(18, 5);
 
         $writer = new Writer($options);
         $writer->openToFile($path);
 
         $writer->getCurrentSheet()->setName('Students');
         $writer->addRow(Row::fromValuesWithStyle(
-            ['Student ID Number', 'Last Name', 'Email'],
+            ['Student ID Number', 'Last Name', 'Email', 'Course', 'Year Graduated'],
             (new Style)->withFontBold(true),
         ));
 
@@ -36,7 +38,10 @@ final class StudentTemplate
             '2. Student ID Number is required and must be 8 digits, for example 20244012.',
             '3. Last Name is required.',
             '4. Email is optional. Students without one can be given an email on the upload page.',
-            '5. Each Student ID Number can appear only once.',
+            '5. Course is optional: ACT, BLIS or BSIT.',
+            '6. Year Graduated is optional: a 4-digit year, for example 2024.',
+            '7. Course and Year let the Reports page show the response rate per course and year.',
+            '8. Each Student ID Number can appear only once.',
         ] as $line) {
             $writer->addRow(Row::fromValues([$line]));
         }

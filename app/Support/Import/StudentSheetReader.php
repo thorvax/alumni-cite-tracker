@@ -12,7 +12,7 @@ use OpenSpout\Reader\XLSX\Sheet as XlsxSheet;
 
 /**
  * Reads the first sheet of an .xlsx or .csv file with the columns
- * Student ID Number, Last Name and Email (the Email column is optional).
+ * Student ID Number, Last Name, and the optional Email, Course and Year Graduated.
  */
 final class StudentSheetReader
 {
@@ -22,12 +22,17 @@ final class StudentSheetReader
         'student_id' => ['studentidnumber', 'studentid', 'idnumber', 'studentno', 'studentnumber'],
         'last_name' => ['lastname', 'surname', 'familyname'],
         'email' => ['email', 'emailaddress'],
+        'course' => ['course', 'program', 'courseprogram', 'degree'],
+        'year_graduated' => ['yeargraduated', 'graduationyear', 'yearofgraduation', 'year', 'batch'],
     ];
+
+    /** Letters used in messages when an optional column is missing from the file. */
+    private const DEFAULT_LETTERS = ['student_id' => 'A', 'last_name' => 'B', 'email' => 'C', 'course' => 'D', 'year_graduated' => 'E'];
 
     /**
      * @return array{
-     *     rows: list<array{row: int, student_id: string, last_name: string, email: string}>,
-     *     columns: array{student_id: string, last_name: string, email: string},
+     *     rows: list<array{row: int, student_id: string, last_name: string, email: string, course: string, year_graduated: string}>,
+     *     columns: array{student_id: string, last_name: string, email: string, course: string, year_graduated: string},
      *     error: string|null
      * }
      */
@@ -55,8 +60,8 @@ final class StudentSheetReader
 
     /**
      * @return array{
-     *     rows: list<array{row: int, student_id: string, last_name: string, email: string}>,
-     *     columns: array{student_id: string, last_name: string, email: string},
+     *     rows: list<array{row: int, student_id: string, last_name: string, email: string, course: string, year_graduated: string}>,
+     *     columns: array{student_id: string, last_name: string, email: string, course: string, year_graduated: string},
      *     error: string|null
      * }
      */
@@ -91,7 +96,9 @@ final class StudentSheetReader
                 'row' => (int) $rowNumber,
                 'student_id' => $cells[$positions['student_id']] ?? '',
                 'last_name' => $cells[$positions['last_name']] ?? '',
-                'email' => $positions['email'] === null ? '' : ($cells[$positions['email']] ?? ''),
+                'email' => $this->cell($cells, $positions['email']),
+                'course' => $this->cell($cells, $positions['course']),
+                'year_graduated' => $this->cell($cells, $positions['year_graduated']),
             ];
         }
 
@@ -104,7 +111,9 @@ final class StudentSheetReader
             'columns' => [
                 'student_id' => $this->letter($positions['student_id']),
                 'last_name' => $this->letter($positions['last_name']),
-                'email' => $positions['email'] === null ? 'C' : $this->letter($positions['email']),
+                'email' => $this->columnLetter($positions, 'email'),
+                'course' => $this->columnLetter($positions, 'course'),
+                'year_graduated' => $this->columnLetter($positions, 'year_graduated'),
             ],
             'error' => null,
         ];
@@ -112,11 +121,11 @@ final class StudentSheetReader
 
     /**
      * @param  list<string>  $headings
-     * @return array{student_id: int, last_name: int, email: int|null}|null
+     * @return array{student_id: int, last_name: int, email: int|null, course: int|null, year_graduated: int|null}|null
      */
     private function findColumns(array $headings): ?array
     {
-        $found = ['student_id' => null, 'last_name' => null, 'email' => null];
+        $found = ['student_id' => null, 'last_name' => null, 'email' => null, 'course' => null, 'year_graduated' => null];
 
         foreach ($headings as $index => $heading) {
             $key = strtolower((string) preg_replace('/[^a-z0-9]/i', '', $heading));
@@ -132,7 +141,33 @@ final class StudentSheetReader
             return null;
         }
 
-        return ['student_id' => $found['student_id'], 'last_name' => $found['last_name'], 'email' => $found['email']];
+        return [
+            'student_id' => $found['student_id'],
+            'last_name' => $found['last_name'],
+            'email' => $found['email'],
+            'course' => $found['course'],
+            'year_graduated' => $found['year_graduated'],
+        ];
+    }
+
+    /**
+     * The value of an optional column, or '' when the file does not have that column.
+     *
+     * @param  list<string>  $cells
+     */
+    private function cell(array $cells, ?int $position): string
+    {
+        return $position === null ? '' : ($cells[$position] ?? '');
+    }
+
+    /**
+     * @param  array{student_id: int, last_name: int, email: int|null, course: int|null, year_graduated: int|null}  $positions
+     */
+    private function columnLetter(array $positions, string $field): string
+    {
+        $position = $positions[$field] ?? null;
+
+        return $position === null ? self::DEFAULT_LETTERS[$field] : $this->letter($position);
     }
 
     private function clean(mixed $value): string
@@ -171,13 +206,13 @@ final class StudentSheetReader
     }
 
     /**
-     * @return array{rows: list<never>, columns: array{student_id: string, last_name: string, email: string}, error: string}
+     * @return array{rows: list<never>, columns: array{student_id: string, last_name: string, email: string, course: string, year_graduated: string}, error: string}
      */
     private function failure(string $message): array
     {
         return [
             'rows' => [],
-            'columns' => ['student_id' => 'A', 'last_name' => 'B', 'email' => 'C'],
+            'columns' => self::DEFAULT_LETTERS,
             'error' => $message,
         ];
     }

@@ -88,6 +88,56 @@ it('lists IDs that are already uploaded and skips them on confirm', function () 
     Queue::assertPushed(SendSurveyInvitation::class, 1);
 });
 
+it('imports the optional Course and Year Graduated columns', function () {
+    Queue::fake();
+    $csv = "Student ID Number,Last Name,Email,Course,Year Graduated\n"
+        ."20240001,Cruz,,bsit,2024\n"
+        ."20240002,Santos,,Bachelor of Library in Information Science,2023\n"
+        ."20240003,Reyes,,,\n";
+
+    $this->actingAs($this->admin)->post('/graduates/import/preview', ['file' => csvUpload($csv)]);
+    $this->actingAs($this->admin)->post('/graduates/import/confirm')->assertRedirect('/graduates/import');
+
+    $cruz = Graduate::where('student_id', '20240001')->first();
+    $santos = Graduate::where('student_id', '20240002')->first();
+    $reyes = Graduate::where('student_id', '20240003')->first();
+
+    expect($cruz->course)->toBe('Bachelor of Science in Information and Technology')
+        ->and($cruz->year_graduated)->toBe(2024)
+        ->and($santos->courseCode())->toBe('BLIS')
+        ->and($reyes->course)->toBeNull()
+        ->and($reyes->year_graduated)->toBeNull();
+});
+
+it('reports a wrong course or year by cell', function () {
+    $nextYear = (int) date('Y') + 1;
+    $csv = "Student ID Number,Last Name,Course,Year Graduated\n"
+        ."20240001,Cruz,Nursing,2024\n"
+        ."20240002,Santos,ACT,{$nextYear}\n"
+        ."20240003,Reyes,ACT,'24\n";
+
+    $this->actingAs($this->admin)->post('/graduates/import/preview', ['file' => csvUpload($csv)]);
+
+    $this->actingAs($this->admin)
+        ->get('/graduates/import')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('preview.errors', 3)
+            ->where('preview.errors.0.cell', 'C2')
+            ->where('preview.errors.0.type', 'invalid_course')
+            ->where('preview.errors.1.cell', 'D3')
+            ->where('preview.errors.1.type', 'invalid_year')
+            ->where('preview.errors.2.cell', 'D4'));
+});
+
+it('fills survey step B with the uploaded course and year', function () {
+    loginGraduate(['course' => 'Associate in Computer Technology', 'year_graduated' => 2024]);
+
+    $this->get('/survey/educational-background')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('draft.course', 'Associate in Computer Technology')
+            ->where('draft.year_graduated', '2024'));
+});
+
 it('cancels a preview without saving', function () {
     $csv = "Student ID Number,Last Name,Email\n20240002,Santos,\n";
 

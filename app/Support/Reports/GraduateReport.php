@@ -283,10 +283,10 @@ class GraduateReport
     /**
      * 14. Survey progress for uploaded graduates: uploaded -> with email -> email sent -> answered.
      *
-     * Bulk upload only has Student ID, Last Name and Email, so the course and
-     * year of people who have not answered yet are unknown.
+     * Response rate per course/year uses the optional Course and Year Graduated
+     * columns of the bulk upload (or the survey answers once someone answers).
      *
-     * @return array{uploaded: int, rate: array{count: int, percent: int}, stages: list<array{label: string, count: int, percent: int}>, answeredByCourse: list<array{label: string, count: int, percent: int}>, answeredByYear: list<array{label: string, count: int, percent: int}>, unknown: int}
+     * @return array{uploaded: int, rate: array{count: int, percent: int}, stages: list<array{label: string, count: int, percent: int}>, byCourse: list<array{label: string, uploaded: int, answered: int, percent: int}>, byYear: list<array{label: string, uploaded: int, answered: int, percent: int}>, noCourse: int, noYear: int}
      */
     public function responseFunnel(): array
     {
@@ -309,31 +309,43 @@ class GraduateReport
             'Answered' => $answered,
         ]);
 
-        $answeredBy = function (string $column) {
-            $counts = $this->graduates()
-                ->whereNotNull('invite_token')
-                ->whereNotNull('survey_completed_at')
-                ->whereNotNull($column)
-                ->groupBy($column)
-                ->orderBy($column)
-                ->select([$column.' as value'])
-                ->selectRaw('count(*) as aggregate')
-                ->pluck('aggregate', 'value')
-                ->mapWithKeys(fn ($count, $value) => [
-                    (string) ($column === 'course' ? (Graduate::COURSE_CODES[$value] ?? $value) : $value) => (int) $count,
-                ]);
-
-            return self::items($counts, (int) $counts->sum());
-        };
-
         return [
             'uploaded' => $uploaded,
             'rate' => ['count' => $answered, 'percent' => self::percent($answered, $uploaded)],
             'stages' => $uploaded > 0 ? self::items($stages, $uploaded) : [],
-            'answeredByCourse' => $answeredBy('course'),
-            'answeredByYear' => $answeredBy('year_graduated'),
-            'unknown' => $uploaded - $answered,
+            'byCourse' => $this->responseRateBy('course'),
+            'byYear' => $this->responseRateBy('year_graduated'),
+            // Uploaded without a course / year (not in the upload file, and not answered yet).
+            'noCourse' => $this->graduates()->whereNotNull('invite_token')->whereNull('course')->count(),
+            'noYear' => $this->graduates()->whereNotNull('invite_token')->whereNull('year_graduated')->count(),
         ];
+    }
+
+    /**
+     * Response rate per course or year: answered / uploaded in that group.
+     * Course and year come from the bulk upload, or from the survey once answered.
+     *
+     * @return list<array{label: string, uploaded: int, answered: int, percent: int}>
+     */
+    private function responseRateBy(string $column): array
+    {
+        return array_values($this->graduates()
+            ->whereNotNull('invite_token')
+            ->whereNotNull($column)
+            ->groupBy($column)
+            ->orderBy($column)
+            ->select([$column.' as value'])
+            ->selectRaw('count(*) as uploaded')
+            ->selectRaw('sum(case when survey_completed_at is not null then 1 else 0 end) as answered')
+            ->toBase()
+            ->get()
+            ->map(fn ($row) => [
+                'label' => (string) ($column === 'course' ? (Graduate::COURSE_CODES[$row->value] ?? $row->value) : $row->value),
+                'uploaded' => (int) $row->uploaded,
+                'answered' => (int) $row->answered,
+                'percent' => self::percent((int) $row->answered, (int) $row->uploaded),
+            ])
+            ->all());
     }
 
     /**

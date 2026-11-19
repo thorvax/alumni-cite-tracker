@@ -149,6 +149,9 @@ class GraduateImportController extends Controller
                 'full_name' => $row['last_name'],
                 'last_name' => $row['last_name'],
                 'email' => $row['email'],
+                // Optional columns; the survey answers replace them later.
+                'course' => $row['course'] ?? null,
+                'year_graduated' => $row['year_graduated'] ?? null,
                 'invite_token' => Str::random(48),
                 'invite_status' => 'pending',
             ]);
