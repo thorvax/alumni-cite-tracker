@@ -39,6 +39,7 @@ export default function CreateGraduate() {
                         onSubmit={submit}
                         cancelHref="/graduates"
                         submitLabel="Save"
+                        showInviteOption
                     />
                 </section>
             </AdminLayout>

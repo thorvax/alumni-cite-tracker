@@ -7,8 +7,10 @@ import AdminLayout from '@/layouts/admin-layout';
 
 type Props = {
     graduate: { id: number } & {
-        [K in keyof GraduateData]: string | null;
+        [K in Exclude<keyof GraduateData, 'send_invite'>]: string | null;
     };
+    /** Already has a personal survey link. */
+    hasLink: boolean;
 };
 
 const tabs = [
@@ -21,7 +23,7 @@ const tabs = [
     'Feedback and Suggestions',
 ];
 
-export default function EditGraduate({ graduate }: Props) {
+export default function EditGraduate({ graduate, hasLink }: Props) {
     const { data, setData, patch, processing, errors } = useForm<GraduateData>({
         full_name: graduate.full_name ?? '',
         birth_date: graduate.birth_date ?? '',
@@ -33,6 +35,12 @@ export default function EditGraduate({ graduate }: Props) {
         region: graduate.region ?? '',
         province: graduate.province ?? '',
         city: graduate.city ?? '',
+        student_id: graduate.student_id ?? '',
+        last_name: graduate.last_name ?? '',
+        course: graduate.course ?? '',
+        year_graduated: graduate.year_graduated ?? '',
+        employment_status: graduate.employment_status ?? '',
+        send_invite: false,
     });
 
     const submit = (e: FormEvent) => {
@@ -99,6 +107,7 @@ export default function EditGraduate({ graduate }: Props) {
                             onSubmit={submit}
                             cancelHref={`/graduates/${graduate.id}`}
                             submitLabel="Update"
+                            hasLink={hasLink}
                         />
                     </section>
                 </div>
