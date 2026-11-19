@@ -36,4 +36,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/system', [SettingsController::class, 'show'])->name('admin.settings');
     Route::patch('settings/system/account', [SettingsController::class, 'updateAccount'])->name('admin.settings.account');
     Route::patch('settings/system', [SettingsController::class, 'updateSystem'])->name('admin.settings.system');
+    Route::patch('settings/system/update-reminders', [SettingsController::class, 'updateReminders'])->name('admin.settings.update-reminders');
 });
