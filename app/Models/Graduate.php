@@ -167,6 +167,23 @@ class Graduate extends Authenticatable
     /**
      * answered, no_email, or the email's state: pending, queued, sent, failed.
      */
+    /**
+     * The same rules as invitationStatus(), as a database filter (for paging and counts).
+     *
+     * @param  Builder<Graduate>  $query
+     * @return Builder<Graduate>
+     */
+    public function scopeInvitationStatus(Builder $query, string $status): Builder
+    {
+        return match ($status) {
+            'answered' => $query->whereNotNull('survey_completed_at'),
+            'no_email' => $query->whereNull('survey_completed_at')->withoutEmail(),
+            'pending' => $query->whereNull('survey_completed_at')->withEmail()
+                ->where(fn (Builder $q) => $q->whereNull('invite_status')->orWhereIn('invite_status', ['', 'pending'])),
+            default => $query->whereNull('survey_completed_at')->withEmail()->where('invite_status', $status),
+        };
+    }
+
     public function invitationStatus(): string
     {
         if ($this->survey_completed_at !== null) {
