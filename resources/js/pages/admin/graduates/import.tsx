@@ -2,6 +2,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { RequestPayload } from '@inertiajs/core';
 import { Download } from 'lucide-react';
 import type { FormEvent } from 'react';
+import FilePicker from '@/components/admin/file-picker';
 import AdminLayout from '@/layouts/admin-layout';
 
 type SheetRow = {
@@ -90,18 +91,14 @@ export default function ImportGraduates({ flash, preview }: Props) {
                             for the right format.
                         </p>
 
-                        <form className="ad-inline" onSubmit={sendUpload}>
-                            <input
-                                className="ad-input"
-                                type="file"
-                                aria-label="Excel or CSV file"
-                                accept=".xlsx,.csv"
-                                onChange={(e) =>
-                                    upload.setData(
-                                        'file',
-                                        e.target.files?.[0] ?? null,
-                                    )
-                                }
+                        <form className="ad-upload" onSubmit={sendUpload}>
+                            <FilePicker
+                                file={upload.data.file}
+                                onChange={(file) => {
+                                    upload.clearErrors('file');
+                                    upload.setData('file', file);
+                                }}
+                                disabled={upload.processing}
                             />
                             <button
                                 type="submit"
