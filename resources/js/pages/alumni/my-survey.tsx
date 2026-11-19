@@ -3,38 +3,28 @@ import AlumniLayout from '@/layouts/alumni-layout';
 import { edit } from '@/routes/alumni/survey';
 import { start as surveyStart } from '@/routes/survey';
 
+type Section = {
+    key: string;
+    title: string;
+    rows: { label: string; value: string }[];
+};
+
 type Props = {
     graduate: {
         name: string | null;
-        student_id: string | null;
-        email: string | null;
-        contact_number: string | null;
-        address: string | null;
-        course: string | null;
-        year_graduated: number | null;
-        employment_status: string | null;
         answered: boolean;
         completed_at: string | null;
         updated_at: string | null;
         /** Has saved answers that can be loaded into the survey. */
         can_edit: boolean;
     };
+    /** Every answered question, grouped like the admin Graduate Details page. */
+    sections: Section[];
     status?: string | null;
 };
 
-/** The logged-in graduate's page: thank-you and a summary of their answers. */
-export default function MySurvey({ graduate, status }: Props) {
-    const rows: [string, string | number | null][] = [
-        ['Name', graduate.name],
-        ['Student ID Number', graduate.student_id],
-        ['Email', graduate.email],
-        ['Contact number', graduate.contact_number],
-        ['Address', graduate.address],
-        ['Course', graduate.course],
-        ['Year graduated', graduate.year_graduated],
-        ['Employment status', graduate.employment_status],
-    ];
-
+/** The logged-in graduate's page: thank-you and all of their answers (read only). */
+export default function MySurvey({ graduate, sections, status }: Props) {
     return (
         <>
             <Head title="My Survey" />
@@ -57,17 +47,6 @@ export default function MySurvey({ graduate, status }: Props) {
                         </p>
                     )}
 
-                    {graduate.answered && (
-                        <dl className="sv-summary">
-                            {rows.map(([label, value]) => (
-                                <div key={label}>
-                                    <dt>{label}</dt>
-                                    <dd>{value ?? '—'}</dd>
-                                </div>
-                            ))}
-                        </dl>
-                    )}
-
                     {graduate.answered && graduate.can_edit && (
                         <>
                             <p className="sv-auth-note">
@@ -83,6 +62,26 @@ export default function MySurvey({ graduate, status }: Props) {
                                 Update my answers
                             </Link>
                         </>
+                    )}
+
+                    {sections.length > 0 && (
+                        <div className="sv-answers">
+                            <h2 className="sv-intro-heading">Your answers</h2>
+
+                            {sections.map((section, i) => (
+                                <details key={section.key} open={i === 0}>
+                                    <summary>{section.title}</summary>
+                                    <dl className="sv-summary">
+                                        {section.rows.map((row) => (
+                                            <div key={row.label}>
+                                                <dt>{row.label}</dt>
+                                                <dd>{row.value}</dd>
+                                            </div>
+                                        ))}
+                                    </dl>
+                                </details>
+                            ))}
+                        </div>
                     )}
 
                     {!graduate.answered && (
