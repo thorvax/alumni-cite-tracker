@@ -967,22 +967,6 @@ a.sv-step {
     }
 }
 
-/* ---------- landing: Get Started + Alumni Login ---------- */
-.sv-cta-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 20px;
-}
-.sv-cta-row .sv-cta {
-    margin-top: 0;
-}
-.sv-cta-ghost {
-    background: var(--sv-pill-bg);
-    border: 1px solid var(--sv-cta-bg);
-    color: var(--sv-hero-fg);
-}
-
 /* ---------- alumni Log out (sidebar) ---------- */
 .sv-logout {
     display: inline-flex;
@@ -1120,4 +1104,38 @@ a.sv-step {
 }
 .sv-answers dd {
     white-space: pre-line;
+}
+
+/* ---------- landing: one main button + note ---------- */
+.sv-cta-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 20px;
+}
+.sv-cta-block .sv-cta {
+    margin-top: 0;
+}
+.sv-cta-note {
+    max-width: 420px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 19px;
+    color: var(--sv-hero-sub);
+}
+.sv-cta-note a,
+.sv-cta-link {
+    padding: 0;
+    background: none;
+    border: 0;
+    font: inherit;
+    color: var(--sv-hero-fg);
+    text-decoration: underline;
+    cursor: pointer;
+}
+.sv-cta-note a:focus-visible,
+.sv-cta-link:focus-visible {
+    outline: 2px solid var(--sv-hero-fg);
+    outline-offset: 2px;
 }

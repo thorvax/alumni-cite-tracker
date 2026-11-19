@@ -1,9 +1,10 @@
-import { Head, Link } from '@inertiajs/react';
-import { ArrowRight, House, Info, LogIn, MessageSquare } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ArrowRight, House, Info, MessageSquare } from 'lucide-react';
 import { CiteLogo, CollegeCredit } from '@/components/cite-logo';
 import ThemeToggle from '@/components/survey/theme-toggle';
 import { privacy } from '@/routes';
-import { login } from '@/routes/alumni';
+import { login, logout, mySurvey } from '@/routes/alumni';
+import { show as forgotPassword } from '@/routes/alumni/forgot';
 import { start as surveyStart } from '@/routes/survey';
 
 // About and Contact pages don't exist yet; point these at real routes once they do.
@@ -12,6 +13,50 @@ const navItems = [
     { label: 'About', href: '#about', icon: Info, active: false },
     { label: 'Contact', href: '#contact', icon: MessageSquare, active: false },
 ];
+
+/**
+ * One main button that says exactly where it goes:
+ *  - not logged in: Log in to the survey (+ how first-time graduates activate)
+ *  - logged in, not answered: Start the survey
+ *  - logged in, answered: Go to My Survey
+ */
+function SurveyAction() {
+    const { alumni } = usePage().props;
+
+    if (!alumni) {
+        return (
+            <>
+                <Link href={login()} className="sv-cta">
+                    Log in to the survey
+                    <ArrowRight size={16} aria-hidden />
+                </Link>
+                <p className="sv-cta-note">
+                    First time here? Open the personal link we emailed you to
+                    activate your account. ·{' '}
+                    <Link href={forgotPassword()}>Forgot password?</Link>
+                </p>
+            </>
+        );
+    }
+
+    return (
+        <>
+            <Link
+                href={alumni.answered ? mySurvey() : surveyStart()}
+                className="sv-cta"
+            >
+                {alumni.answered ? 'Go to My Survey' : 'Start the survey'}
+                <ArrowRight size={16} aria-hidden />
+            </Link>
+            <p className="sv-cta-note">
+                Logged in{alumni.last_name ? ` as ${alumni.last_name}` : ''} ·{' '}
+                <Link href={logout()} as="button" className="sv-cta-link">
+                    Log out
+                </Link>
+            </p>
+        </>
+    );
+}
 
 export default function Welcome() {
     return (
@@ -71,19 +116,8 @@ export default function Welcome() {
                                 <span>Empower Tomorrow</span>
                             </h1>
 
-                            <div className="sv-cta-row">
-                                <Link href={surveyStart()} className="sv-cta">
-                                    Get Started
-                                    <ArrowRight size={16} aria-hidden />
-                                </Link>
-
-                                <Link
-                                    href={login()}
-                                    className="sv-cta sv-cta-ghost"
-                                >
-                                    <LogIn size={16} aria-hidden />
-                                    Alumni Login
-                                </Link>
+                            <div className="sv-cta-block">
+                                <SurveyAction />
                             </div>
                         </div>
                     </div>

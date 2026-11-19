@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Graduate;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -44,9 +45,29 @@ class HandleInertiaRequests extends Middleware
                 // and user() would then return the graduate here.
                 'user' => $request->user('web'),
             ],
-            // The logged-in graduate (alumni login), used for the Log out button.
-            'alumni' => $request->user('graduate')?->only(['last_name']),
+            // The logged-in graduate (alumni login): the Log out button and the
+            // landing page button ("Start the survey" or "Go to My Survey").
+            'alumni' => $this->alumni($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+        ];
+    }
+
+    /**
+     * Only what the pages need about the logged-in graduate (no other personal data).
+     *
+     * @return array{last_name: string|null, answered: bool}|null
+     */
+    private function alumni(Request $request): ?array
+    {
+        $graduate = $request->user('graduate');
+
+        if (! $graduate instanceof Graduate) {
+            return null;
+        }
+
+        return [
+            'last_name' => $graduate->last_name,
+            'answered' => $graduate->survey_completed_at !== null,
         ];
     }
 }
