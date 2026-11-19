@@ -1556,3 +1556,80 @@
     padding-left: 10px;
     font-size: 12.5px;
 }
+
+/* ---------- Update History (one graduate) ---------- */
+.ad-history {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.ad-diff {
+    width: 100%;
+    margin-top: 6px;
+    border-collapse: collapse;
+    font-size: 12.5px;
+}
+.ad-diff caption {
+    margin-bottom: 6px;
+    text-align: left;
+}
+.ad-diff th,
+.ad-diff td {
+    padding: 7px 10px;
+    border: 1px solid var(--ad-row-border);
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+.ad-diff thead th {
+    background: var(--ad-row-bg);
+    color: var(--ad-muted);
+    font-weight: 600;
+}
+.ad-diff tbody th {
+    font-weight: 600;
+}
+.ad-diff tbody th .ad-faint {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+}
+/* Before is struck through and After underlined, so it is not color alone. */
+.ad-diff del {
+    color: var(--ad-error);
+}
+.ad-diff ins {
+    color: var(--ad-ok);
+}
+.ad-history-all {
+    margin-top: 12px;
+}
+.ad-history-all summary {
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+.ad-history-all summary:focus-visible {
+    outline: 2px solid var(--ad-text);
+    outline-offset: 2px;
+}
+.ad-history-all h3 {
+    margin: 14px 0 6px;
+    font-size: 13px;
+}
+@media (max-width: 900px) {
+    .ad-diff thead {
+        display: none;
+    }
+    .ad-diff tr {
+        display: block;
+        margin-bottom: 8px;
+    }
+    .ad-diff th,
+    .ad-diff td {
+        display: block;
+    }
+}

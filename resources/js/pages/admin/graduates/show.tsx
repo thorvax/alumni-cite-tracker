@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Mail, Printer, User } from 'lucide-react';
+import { History, Mail, Printer, User } from 'lucide-react';
 import { useState } from 'react';
 import AdminLayout from '@/layouts/admin-layout';
 
@@ -48,6 +48,12 @@ export default function ShowGraduate({
                     <>
                         <Link href="/graduates" className="ad-btn">
                             ← Back
+                        </Link>
+                        <Link
+                            href={`/graduates/${graduate.id}/history`}
+                            className="ad-btn"
+                        >
+                            <History size={14} aria-hidden /> Update History
                         </Link>
                         {updateReminder?.can && (
                             <button

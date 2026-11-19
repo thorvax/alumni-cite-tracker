@@ -130,6 +130,16 @@ class Graduate extends Authenticatable
         return $this->belongsTo(SurveyResponse::class);
     }
 
+    /**
+     * Every survey submission (first answer and updates), for the update history.
+     *
+     * @return HasMany<SurveyResponse, $this>
+     */
+    public function surveyResponses(): HasMany
+    {
+        return $this->hasMany(SurveyResponse::class);
+    }
+
     public function courseCode(): ?string
     {
         if ($this->course === null) {
@@ -253,33 +263,7 @@ class Graduate extends Authenticatable
      */
     public static function fromSurvey(array $answers, SurveyResponse $response, ?self $existing = null): self
     {
-        $general = $answers['general-information'] ?? [];
-        $education = $answers['educational-background'] ?? [];
-
-        $name = collect([$general['first_name'] ?? null, $general['middle_name'] ?? null, $general['last_name'] ?? null])
-            ->filter()
-            ->implode(' ');
-
-        $address = collect([$general['house_no'] ?? null, $general['barangay'] ?? null, $general['city'] ?? null, $general['province'] ?? null])
-            ->filter()
-            ->implode(', ');
-
-        $attributes = [
-            'full_name' => $name,
-            'last_name' => $general['last_name'] ?? null,
-            'email' => $general['email'] ?? null,
-            'birth_date' => $general['birth_date'] ?? null,
-            'gender' => isset($general['sex']) ? ucfirst((string) $general['sex']) : null,
-            'civil_status' => $general['civil_status'] ?? null,
-            'contact_number' => $general['mobile_primary'] ?? null,
-            'current_address' => $address !== '' ? $address : null,
-            'region' => $general['region'] ?? null,
-            'province' => $general['province'] ?? null,
-            'city' => $general['city'] ?? null,
-            'course' => $education['course'] ?? null,
-            'year_graduated' => $education['year_graduated'] ?? null,
-            'employment_status' => self::statusFromSurvey($answers),
-            'survey' => $answers,
+        $attributes = self::attributesFromAnswers($answers) + [
             'survey_response_id' => $response->id,
             'survey_completed_at' => now(),
         ];
@@ -299,6 +283,45 @@ class Graduate extends Authenticatable
         }
 
         return self::create($attributes);
+    }
+
+    /**
+     * The graduate fields that come from a set of survey answers (also used to
+     * show an older submission in the update history).
+     *
+     * @param  array<string, array<string, mixed>>  $answers  Answers keyed by step slug.
+     * @return array<string, mixed>
+     */
+    public static function attributesFromAnswers(array $answers): array
+    {
+        $general = $answers['general-information'] ?? [];
+        $education = $answers['educational-background'] ?? [];
+
+        $name = collect([$general['first_name'] ?? null, $general['middle_name'] ?? null, $general['last_name'] ?? null])
+            ->filter()
+            ->implode(' ');
+
+        $address = collect([$general['house_no'] ?? null, $general['barangay'] ?? null, $general['city'] ?? null, $general['province'] ?? null])
+            ->filter()
+            ->implode(', ');
+
+        return [
+            'full_name' => $name,
+            'last_name' => $general['last_name'] ?? null,
+            'email' => $general['email'] ?? null,
+            'birth_date' => $general['birth_date'] ?? null,
+            'gender' => isset($general['sex']) ? ucfirst((string) $general['sex']) : null,
+            'civil_status' => $general['civil_status'] ?? null,
+            'contact_number' => $general['mobile_primary'] ?? null,
+            'current_address' => $address !== '' ? $address : null,
+            'region' => $general['region'] ?? null,
+            'province' => $general['province'] ?? null,
+            'city' => $general['city'] ?? null,
+            'course' => $education['course'] ?? null,
+            'year_graduated' => $education['year_graduated'] ?? null,
+            'employment_status' => self::statusFromSurvey($answers),
+            'survey' => $answers,
+        ];
     }
 
     /** Survey steps and how they are named in "Changed: ...". */

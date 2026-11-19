@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GraduateController;
+use App\Http\Controllers\GraduateHistoryController;
 use App\Http\Controllers\GraduateImportController;
 use App\Http\Controllers\GraduateRemindersController;
 use App\Http\Controllers\GraduateUpdatesController;
@@ -36,6 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->except(['destroy']);
     Route::post('graduates/{graduate}/update-reminder', [GraduateController::class, 'sendUpdateReminder'])
         ->name('graduates.update-reminder');
+    Route::get('graduates/{graduate}/history', GraduateHistoryController::class)->name('graduates.history');
 
     Route::get('search', SearchController::class)->name('search');
     Route::get('reports', [ReportController::class, 'index'])->name('reports');
