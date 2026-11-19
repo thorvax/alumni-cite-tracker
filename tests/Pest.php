@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Graduate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +48,19 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Logs in an uploaded graduate with the alumni login (the survey requires it).
+ * Note: actingAs(..., 'graduate') also makes "graduate" the default guard for
+ * the rest of the test.
+ */
+function loginGraduate(array $attributes = []): Graduate
+{
+    $graduate = Graduate::factory()->invited()->create($attributes);
+    $graduate->forceFill(['password' => 'Secret123', 'activated_at' => now()])->save();
+
+    test()->actingAs($graduate, 'graduate');
+
+    return $graduate;
 }

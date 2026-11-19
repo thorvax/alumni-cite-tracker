@@ -28,7 +28,7 @@ class SecurityController
      */
     public function update(PasswordUpdateRequest $request): RedirectResponse
     {
-        $request->user()->update([
+        $request->user('web')->update([
             'password' => $request->password,
         ]);
 

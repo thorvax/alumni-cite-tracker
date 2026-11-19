@@ -38,13 +38,57 @@ it('lists, paginates and searches graduates', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/graduates/index')
             ->where('graduates.total', 11)
-            ->has('graduates.data', 8));
+            ->has('graduates.data', 10)
+            ->where('filters.per_page', 10));
 
     $this->actingAs($this->admin)
         ->get('/graduates?q=Dela+Cruz')
         ->assertInertia(fn (Assert $page) => $page
             ->where('graduates.total', 1)
             ->where('graduates.data.0.name', 'Juan Dela Cruz'));
+});
+
+it('shows 5, 10, 25, 50 or 100 graduates per page', function (int $perPage, int $shown) {
+    Graduate::factory()->count(30)->create();
+
+    $this->actingAs($this->admin)
+        ->get("/graduates?per_page={$perPage}")
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('graduates.data', $shown)
+            ->where('filters.per_page', $perPage)
+            ->where('perPageOptions', [5, 10, 25, 50, 100]));
+})->with([
+    [5, 5],
+    [25, 25],
+    [100, 30],
+]);
+
+it('falls back to 10 per page for a size that is not offered', function () {
+    Graduate::factory()->count(30)->create();
+
+    $this->actingAs($this->admin)
+        ->get('/graduates?per_page=100000')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('graduates.data', 10)
+            ->where('filters.per_page', 10));
+});
+
+it('opens a typed page number and keeps the search and page size', function () {
+    Graduate::factory()->count(12)->create();
+
+    $this->actingAs($this->admin)
+        ->get('/graduates?per_page=5&page=3')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('graduates.current_page', 3)
+            ->has('graduates.data', 2));
+});
+
+it('sends a page number past the end to the last page', function () {
+    Graduate::factory()->count(12)->create(['full_name' => 'Juan Santos']);
+
+    $this->actingAs($this->admin)
+        ->get('/graduates?q=Santos&per_page=5&page=99')
+        ->assertRedirect('/graduates?q=Santos&per_page=5&page=3');
 });
 
 it('finds graduates by course code and filters by year and status', function () {
@@ -127,8 +171,8 @@ it('builds report numbers for a year', function () {
         ->get('/reports?year=2023')
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/reports')
-            ->where('employment.total', 3)
-            ->where('employment.employed.count', 3));
+            ->where('status.total', 3)
+            ->where('status.rate.count', 3));
 });
 
 it('updates the account and the system settings', function () {

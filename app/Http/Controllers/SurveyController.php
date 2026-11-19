@@ -60,32 +60,8 @@ class SurveyController extends Controller
         'current_level', 'current_sector', 'current_sector_other', 'current_earning',
     ];
 
-    /** Session key that remembers whose personal link was opened. */
-    private const INVITE_KEY = 'survey_invite';
-
     public function start(): RedirectResponse
     {
-        return to_route('survey.show', ['step' => self::STEPS[0]]);
-    }
-
-    /**
-     * The personal link from the email: remembers who is answering, then starts the survey.
-     */
-    public function invite(Request $request, string $token): RedirectResponse
-    {
-        $graduate = Graduate::query()->where('invite_token', $token)->first();
-
-        if ($graduate === null || $graduate->survey_completed_at !== null) {
-            return redirect('/');
-        }
-
-        $request->session()->put(self::INVITE_KEY, [
-            'token' => $token,
-            'student_id' => $graduate->student_id,
-            'last_name' => $graduate->last_name,
-            'email' => $graduate->email,
-        ]);
-
         return to_route('survey.show', ['step' => self::STEPS[0]]);
     }
 
@@ -100,9 +76,9 @@ class SurveyController extends Controller
         return Inertia::render("survey/{$step}", [
             // Restores what the person already typed when they come back to a step.
             'draft' => $this->draft($request, $step),
-            // Set when the person opened their personal email link.
+            // Set when a graduate is logged in (shows their Student ID Number on step A).
             'invite' => $step === 'general-information'
-                ? Arr::only((array) $request->session()->get(self::INVITE_KEY, []), ['student_id'])
+                ? $this->graduate($request)?->only('student_id')
                 : null,
             // Lets the pages hide the job step and pick the right job form.
             'employed' => $this->answer($request, 'employment-data', 'employed'),
@@ -164,6 +140,14 @@ class SurveyController extends Controller
 
     private function submit(Request $request): RedirectResponse
     {
+        // The routes already require the alumni login; this is a safety net so
+        // an answer is never saved without belonging to an uploaded graduate.
+        $graduate = $this->graduate($request);
+
+        if ($graduate === null) {
+            return to_route('alumni.login');
+        }
+
         $employed = $this->answer($request, 'employment-data', 'employed');
         $answers = [];
 
@@ -187,40 +171,47 @@ class SurveyController extends Controller
             'submitted_at' => now(),
         ]);
 
-        // People who used their personal link update the record the upload created.
-        $invite = (array) $request->session()->get(self::INVITE_KEY, []);
-        $existing = isset($invite['token'])
-            ? Graduate::query()->where('invite_token', $invite['token'])->whereNull('survey_completed_at')->first()
-            : null;
+        // Updates the graduate's own record (the one the upload created), so
+        // answering again never adds a second row.
+        $saved = Graduate::fromSurvey($answers, $response, $graduate);
 
-        // Also create the graduate record that admins see on the Graduates page.
-        Graduate::fromSurvey($answers, $response, $existing);
+        // Step A required "I agree to the Privacy Policy". Record when the
+        // answers (the personal data) were actually given to us.
+        $saved->forceFill(['privacy_consented_at' => now()])->save();
 
         foreach (self::STEPS as $slug) {
             $request->session()->forget($this->sessionKey($slug));
         }
 
-        $request->session()->forget(self::INVITE_KEY);
-
-        return redirect('/');
+        return to_route('alumni.my-survey')->with('status', 'Thank you! Your answers have been saved.');
     }
 
     /**
-     * What the person already typed, or the details from their email link on a first visit to step A.
+     * What the person already typed, or the logged-in graduate's details on a first visit to step A.
      *
      * @return array<string, mixed>
      */
     private function draft(Request $request, string $step): array
     {
         $saved = (array) $request->session()->get($this->sessionKey($step), []);
+        $graduate = $this->graduate($request);
 
-        if ($step !== 'general-information') {
+        if ($step !== 'general-information' || $graduate === null) {
             return $saved;
         }
 
-        $invite = (array) $request->session()->get(self::INVITE_KEY, []);
+        return $saved + array_filter([
+            'last_name' => $graduate->last_name,
+            'email' => $graduate->email,
+        ], fn ($value) => filled($value));
+    }
 
-        return $saved + array_filter(Arr::only($invite, ['last_name', 'email']), fn ($value) => filled($value));
+    /** The logged-in graduate (alumni login), or null for the open survey. */
+    private function graduate(Request $request): ?Graduate
+    {
+        $graduate = $request->user('graduate');
+
+        return $graduate instanceof Graduate ? $graduate : null;
     }
 
     private function sessionKey(string $step): string
@@ -317,6 +308,7 @@ class SurveyController extends Controller
                 'house_no' => ['nullable', 'string', 'max:150'],
                 'mobile_primary' => ['required', ...$mobile],
                 'mobile_secondary' => ['nullable', ...$mobile],
+                'privacy' => ['accepted'],
             ],
 
             'educational-background' => [
@@ -468,6 +460,7 @@ class SurveyController extends Controller
             'competencies.required' => 'Select at least one competency.',
             'curriculum_suggestions.required' => 'Please list your suggestions.',
             'certify.accepted' => 'Please certify that your information is true and correct.',
+            'privacy.accepted' => 'Please confirm that you have read and agree to the Privacy Policy.',
         ];
     }
 }

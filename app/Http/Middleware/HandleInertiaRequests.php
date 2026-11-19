@@ -39,8 +39,13 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                // Always the admin login. Named on purpose: on alumni pages the
+                // "auth:graduate" middleware makes "graduate" the default guard,
+                // and user() would then return the graduate here.
+                'user' => $request->user('web'),
             ],
+            // The logged-in graduate (alumni login), used for the Log out button.
+            'alumni' => $request->user('graduate')?->only(['last_name']),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

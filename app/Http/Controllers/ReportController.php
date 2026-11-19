@@ -3,91 +3,154 @@
 namespace App\Http\Controllers;
 
 use App\Models\Graduate;
-use Illuminate\Database\Eloquent\Builder;
+use App\Support\Reports\GraduateReport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * Admin Reports page and its CSV export. The numbers come from GraduateReport;
+ * both use the same Course and Year filters (?course=BSIT&year=2023).
+ */
 class ReportController extends Controller
 {
-    /**
-     * Survey "major line of business" answers (matched by how they start)
-     * grouped into the report's sectors. Anything else counts as Others.
-     */
-    private const SECTORS = [
-        'Information Technology' => 'IT / Software',
-        'Education' => 'Education',
-        'Financial Intermediation' => 'Business / Finance',
-        'Wholesale and Retail Trade' => 'Business / Finance',
-        'Real Estate, Renting and Business Activities' => 'Business / Finance',
-        'Public Administration and Defense' => 'Government',
-    ];
-
-    public function __invoke(Request $request): Response
+    public function index(Request $request): Response
     {
-        $years = Graduate::query()
-            ->whereNotNull('year_graduated')
-            ->distinct()
-            ->orderByDesc('year_graduated')
-            ->pluck('year_graduated');
-
-        $year = $request->integer('year') ?: $years->first();
-
-        $base = fn (): Builder => Graduate::query()
-            ->when($year, fn (Builder $query) => $query->where('year_graduated', $year));
-
-        $total = $base()->count();
-        $employed = $base()->whereIn('employment_status', Graduate::EMPLOYED_STATUSES)->count();
-        $unemployed = $base()->where('employment_status', 'Unemployed')->count();
-        $further = $base()->where('employment_status', 'Further Studies')->count();
-
-        $percent = fn (int $count): int => $total > 0 ? (int) round($count / $total * 100) : 0;
-
-        $sectors = $base()
-            ->whereNotNull('survey')
-            ->get()
-            ->map(function (Graduate $graduate): ?string {
-                $line = data_get($graduate->survey, 'employment-data.business_line');
-
-                return is_string($line) && $line !== '' ? $this->sectorFor($line) : null;
-            })
-            ->filter()
-            ->countBy();
-
-        $counted = $sectors->sum();
-
-        $top = $sectors
-            ->except('Others')
-            ->sortDesc()
-            ->take(4)
-            ->map(fn (int $count, string $label) => ['label' => $label, 'percent' => (int) round($count / $counted * 100)])
-            ->values();
-
-        if ($sectors->has('Others')) {
-            $top->push(['label' => 'Others', 'percent' => (int) round($sectors->get('Others', 0) / $counted * 100)]);
-        }
+        [$course, $year] = $this->filters($request);
+        $report = new GraduateReport($course, $year);
 
         return Inertia::render('admin/reports', [
-            'year' => $year ? (string) $year : '',
-            'years' => $years,
-            'employment' => [
-                'total' => $total,
-                'employed' => ['count' => $employed, 'percent' => $percent($employed)],
-                'unemployed' => ['count' => $unemployed, 'percent' => $percent($unemployed)],
-                'further' => ['count' => $further, 'percent' => $percent($further)],
+            'filters' => [
+                'course' => $course !== null ? Graduate::COURSE_CODES[$course] ?? $course : '',
+                'year' => $year !== null ? (string) $year : '',
             ],
-            'sectors' => $top,
+            'options' => [
+                'courses' => array_values(Graduate::COURSE_CODES),
+                'years' => $this->years(),
+            ],
+            'status' => $report->employmentStatus(),
+            'byCourse' => $report->employmentByCourse(),
+            'byYear' => $report->employmentByYear(),
+            'related' => $report->jobRelated(),
+            'timeToLand' => $report->timeToLand(),
+            'sector' => $report->sectorAndPlace(),
+            'earning' => $report->firstJobEarning(),
+            'howFound' => $report->howFound(),
+            'competencies' => $report->competencies(),
+            'curriculum' => $report->curriculum(),
+            'notEmployed' => $report->notEmployedReasons(),
+            'helpNeeded' => $report->helpNeeded(),
+            'courseReasons' => $report->courseReasons(),
+            'funnel' => $report->responseFunnel(),
         ]);
     }
 
-    private function sectorFor(string $line): string
+    /**
+     * The same numbers as a CSV file (opens in Excel). Counts only, no names.
+     */
+    public function export(Request $request): StreamedResponse
     {
-        foreach (self::SECTORS as $prefix => $sector) {
-            if (str_starts_with($line, $prefix)) {
-                return $sector;
+        [$course, $year] = $this->filters($request);
+        $report = new GraduateReport($course, $year);
+
+        $rows = [];
+        $add = function (string $report, string $group, array $items) use (&$rows) {
+            foreach ($items as $item) {
+                $rows[] = [$report, $group, $item['label'], $item['count'], $item['percent'].'%'];
             }
+        };
+
+        $status = $report->employmentStatus();
+        $add('Employment status', 'All', $status['items']);
+        $rows[] = ['Employment status', 'All', 'Employment rate', $status['rate']['count'], $status['rate']['percent'].'%'];
+
+        foreach ($report->employmentByCourse() as $row) {
+            $add('Employment by course', $row['label'], $row['items']);
         }
 
-        return 'Others';
+        foreach ($report->employmentByYear() as $row) {
+            $rows[] = ['Employment by year graduated', (string) $row['year'], 'Employed', $row['employed'], $row['percent'].'%'];
+        }
+
+        $related = $report->jobRelated();
+        $add('Job related to course', 'All', $related['overall']['items']);
+        foreach ($related['courses'] as $row) {
+            $add('Job related to course', $row['label'], $row['items']);
+        }
+
+        $add('Time to land first job', 'All', $report->timeToLand()['items']);
+
+        $sector = $report->sectorAndPlace();
+        $add('Sector of present job', 'All', $sector['sector']['items']);
+        $add('Place of work', 'All', $sector['place']['items']);
+        $add('First job earning', 'All', $report->firstJobEarning()['items']);
+        $add('How they found their first job', 'All', $report->howFound()['items']);
+        $add('Competencies used on the job (can pick more than one)', 'All', $report->competencies()['items']);
+        $add('Curriculum relevant to first job', 'All', $report->curriculum()['relevant']['items']);
+        $add('Reasons for not being employed (can pick more than one)', 'All', $report->notEmployedReasons()['items']);
+        $add('Why they chose the course (can pick more than one)', 'All', $report->courseReasons()['items']);
+        // Written answers (suggestions, help needed) are left out on purpose:
+        // people may have typed personal details in them.
+
+        $funnel = $report->responseFunnel();
+        $add('Survey progress', 'Uploaded graduates', $funnel['stages']);
+        $add('Survey progress', 'Answered by course', $funnel['answeredByCourse']);
+        $add('Survey progress', 'Answered by year graduated', $funnel['answeredByYear']);
+
+        $name = 'cite-report'
+            .($course !== null ? '-'.(Graduate::COURSE_CODES[$course] ?? 'course') : '')
+            .($year !== null ? '-'.$year : '')
+            .'.csv';
+
+        return response()->streamDownload(function () use ($rows, $course, $year) {
+            $out = fopen('php://output', 'w');
+
+            if ($out === false) {
+                return;
+            }
+
+            fwrite($out, "\xEF\xBB\xBF"); // lets Excel read the file as UTF-8
+            fputcsv($out, ['CITE Tracker report', 'Course: '.($course ?? 'All'), 'Year graduated: '.($year ?? 'All'), 'Generated: '.now()->format('Y-m-d H:i')]);
+            fputcsv($out, ['Report', 'Group', 'Label', 'Count', 'Percent']);
+
+            foreach ($rows as $row) {
+                fputcsv($out, $row);
+            }
+
+            fclose($out);
+        }, $name, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * Course comes in as a code (ACT, BLIS, BSIT) and year as a number; anything else means "All".
+     *
+     * @return array{0: string|null, 1: int|null}
+     */
+    private function filters(Request $request): array
+    {
+        $code = strtoupper($request->string('course')->toString());
+        $course = array_search($code, Graduate::COURSE_CODES, true);
+
+        $year = $request->integer('year');
+
+        return [
+            is_string($course) ? $course : null,
+            in_array($year, $this->years(), true) ? $year : null,
+        ];
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function years(): array
+    {
+        return array_values(Graduate::query()
+            ->whereNotNull('year_graduated')
+            ->distinct()
+            ->orderByDesc('year_graduated')
+            ->pluck('year_graduated')
+            ->map(fn ($year) => (int) $year)
+            ->all());
     }
 }

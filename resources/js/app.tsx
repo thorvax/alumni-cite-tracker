@@ -23,6 +23,11 @@ void createInertiaApp({
                 return [AppLayout, SettingsLayout];
             case name.startsWith('survey/'):
                 return null;
+            // Alumni pages and the Privacy Policy use their own AlumniLayout
+            // (the default AppLayout is the admin layout and needs an admin login).
+            case name.startsWith('alumni/'):
+            case name === 'privacy':
+                return null;
             default:
                 return AppLayout;
         }

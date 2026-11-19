@@ -861,3 +861,218 @@ a.sv-step {
     outline: 2px solid var(--sv-text);
     outline-offset: 2px;
 }
+
+/* ---------- alumni account pages (activate, code, password, login, My Survey) ---------- */
+.sv-auth {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 96px;
+}
+.sv-auth-card {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 440px;
+    padding: 32px 28px;
+    background: var(--sv-card-bg);
+    border: 1px solid var(--sv-card-border);
+    border-radius: var(--sv-card-radius);
+}
+.sv-auth-wide {
+    max-width: 720px;
+}
+.sv-auth-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 24px;
+}
+.sv-auth-body > .sv-btn {
+    width: 100%;
+}
+.sv-auth-alert,
+.sv-auth-status {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--sv-error);
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--sv-error);
+}
+.sv-auth-status {
+    border-color: var(--sv-line);
+    color: var(--sv-text);
+}
+.sv-auth-note {
+    margin: 0;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--sv-muted);
+}
+.sv-auth-note .sv-link-btn {
+    margin-top: 0;
+}
+.sv-link-btn:disabled {
+    text-decoration: none;
+    cursor: default;
+}
+.sv-code-input {
+    font-size: 20px;
+    letter-spacing: 0.4em;
+    text-align: center;
+}
+.sv-certify a,
+.sv-auth-footer a {
+    color: inherit;
+    text-decoration: underline;
+}
+.sv-auth-footer {
+    padding: 16px 40px;
+    border-top: 1px solid var(--sv-footer-border);
+    font-size: 12px;
+    text-align: center;
+    color: var(--sv-muted);
+}
+.sv-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 20px;
+    margin: 0;
+}
+.sv-summary dt {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sv-muted);
+}
+.sv-summary dd {
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
+    color: var(--sv-text);
+}
+@media (max-width: 767px) {
+    .sv-auth {
+        padding-top: 68px;
+    }
+    .sv-auth-card {
+        padding: 24px 18px;
+    }
+    .sv-auth-footer {
+        padding: 16px 20px;
+    }
+    .sv-summary {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* ---------- landing: Get Started + Alumni Login ---------- */
+.sv-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+}
+.sv-cta-row .sv-cta {
+    margin-top: 0;
+}
+.sv-cta-ghost {
+    background: var(--sv-pill-bg);
+    border: 1px solid var(--sv-cta-bg);
+    color: var(--sv-hero-fg);
+}
+
+/* ---------- alumni Log out (sidebar) ---------- */
+.sv-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 24px 0 0 24px;
+    padding: 8px 12px;
+    background: var(--sv-ghost-bg);
+    border: 1px solid var(--sv-ghost-border);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--sv-ghost-fg);
+    cursor: pointer;
+}
+.sv-logout:focus-visible {
+    outline: 2px solid var(--sv-text);
+    outline-offset: 2px;
+}
+@media (max-width: 767px) {
+    .sv-logout {
+        margin: 12px 0 16px 24px;
+    }
+}
+.sv-auth-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.sv-auth-link {
+    font-size: 12px;
+    color: var(--sv-text);
+    text-decoration: underline;
+}
+.sv-auth-link:focus-visible {
+    outline: 2px solid var(--sv-text);
+    outline-offset: 2px;
+}
+
+/* ---------- Privacy Policy links + page ---------- */
+.sv-footer-link {
+    align-self: center;
+    margin-right: auto;
+    font-size: 12px;
+    color: var(--sv-muted);
+    text-decoration: underline;
+}
+.sv-landing-footer {
+    padding: 0 77px 24px;
+    font-size: 12px;
+}
+.sv-landing-footer a {
+    color: var(--sv-hero-fg);
+    text-decoration: underline;
+}
+.sv-footer-link:focus-visible,
+.sv-landing-footer a:focus-visible,
+.sv-auth-footer a:focus-visible {
+    outline: 2px solid var(--sv-text);
+    outline-offset: 2px;
+}
+.sv-policy {
+    gap: 14px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--sv-text);
+}
+.sv-policy h2 {
+    margin: 10px 0 6px;
+    font-size: 15px;
+    font-weight: 700;
+}
+.sv-policy p,
+.sv-policy ul {
+    margin: 0 0 8px;
+}
+.sv-policy ul {
+    padding-left: 20px;
+}
+.sv-policy li + li {
+    margin-top: 4px;
+}
+.sv-policy address {
+    font-style: normal;
+}
+@media (max-width: 767px) {
+    .sv-landing-footer {
+        padding: 0 24px 20px;
+    }
+}

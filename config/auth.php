@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Graduate;
 use App\Models\User;
 
 return [
@@ -42,6 +43,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Alumni (graduates) log in with their Student ID Number. Kept apart from admins.
+        'graduate' => [
+            'driver' => 'session',
+            'provider' => 'graduates',
+        ],
     ],
 
     /*
@@ -65,6 +72,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'graduates' => [
+            'driver' => 'eloquent',
+            'model' => Graduate::class,
         ],
 
         // 'users' => [

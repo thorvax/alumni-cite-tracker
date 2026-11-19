@@ -1,54 +1,90 @@
 import { Head, router } from '@inertiajs/react';
+import { Download, Printer } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
+import {
+    BarList,
+    BigStat,
+    ChartCard,
+    Donut,
+    Funnel,
+    ReportSection,
+    StackedBars,
+    TextList,
+    YearColumns,
+} from '@/components/admin/report-charts';
+import type {
+    Breakdown,
+    Item,
+    StackRow,
+    TextAnswers,
+} from '@/components/admin/report-charts';
 import AdminLayout from '@/layouts/admin-layout';
 
-type Stat = { count: number; percent: number };
+type Filters = { course: string; year: string };
 
 type Props = {
-    year: string;
-    years: number[];
-    employment: {
+    filters: Filters;
+    options: { courses: string[]; years: number[] };
+    status: Breakdown & { rate: { count: number; percent: number } };
+    byCourse: StackRow[];
+    byYear: {
+        year: number;
         total: number;
-        employed: Stat;
-        unemployed: Stat;
-        further: Stat;
+        employed: number;
+        percent: number;
+    }[];
+    related: { overall: Breakdown; courses: StackRow[] };
+    timeToLand: Breakdown;
+    sector: { sector: Breakdown; place: Breakdown };
+    earning: Breakdown;
+    howFound: Breakdown;
+    competencies: Breakdown;
+    curriculum: { relevant: Breakdown; suggestions: TextAnswers };
+    notEmployed: Breakdown;
+    helpNeeded: TextAnswers;
+    courseReasons: Breakdown;
+    funnel: {
+        uploaded: number;
+        rate: { count: number; percent: number };
+        stages: Item[];
+        answeredByCourse: Item[];
+        answeredByYear: Item[];
+        unknown: number;
     };
-    sectors: { label: string; percent: number }[];
 };
 
-const RADIUS = 54;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+/** Only the filters that are set, e.g. { course: 'BSIT' }. */
+const query = (filters: Filters) =>
+    Object.fromEntries(Object.entries(filters).filter(([, value]) => value));
 
-export default function Reports({ year, years, employment, sectors }: Props) {
-    const [selected, setSelected] = useState(year);
+export default function Reports({
+    filters,
+    options,
+    status,
+    byCourse,
+    byYear,
+    related,
+    timeToLand,
+    sector,
+    earning,
+    howFound,
+    competencies,
+    curriculum,
+    notEmployed,
+    helpNeeded,
+    courseReasons,
+    funnel,
+}: Props) {
+    const [selected, setSelected] = useState<Filters>(filters);
 
-    const generate = (e: FormEvent) => {
+    const apply = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/reports', selected ? { year: selected } : {}, {
-            preserveState: true,
-        });
+        router.get('/reports', query(selected), { preserveScroll: true });
     };
 
-    const segments = [
-        {
-            label: 'Employed',
-            color: 'var(--ad-c-employed)',
-            ...employment.employed,
-        },
-        {
-            label: 'Unemployed',
-            color: 'var(--ad-c-unemployed)',
-            ...employment.unemployed,
-        },
-        {
-            label: 'Further Studies',
-            color: 'var(--ad-c-further)',
-            ...employment.further,
-        },
-    ];
+    const exportUrl = `/reports/export?${new URLSearchParams(query(filters)).toString()}`;
 
-    const counted = segments.reduce((sum, s) => sum + s.count, 0);
-    let offset = 0;
+    const scope = `${filters.course || 'All courses'} · ${filters.year ? `Graduated ${filters.year}` : 'All years'}`;
 
     return (
         <>
@@ -58,142 +94,295 @@ export default function Reports({ year, years, employment, sectors }: Props) {
                 active="reports"
                 page="reports"
                 title="Reports"
-                subtitle="Generate reports and statistics."
+                subtitle="Graduate tracer statistics. Counts only; no names are shown."
                 actions={
-                    <form className="ad-year" onSubmit={generate}>
-                        <label htmlFor="year">Year</label>
-                        <select
-                            id="year"
-                            className="ad-select"
-                            value={selected}
-                            onChange={(e) => setSelected(e.target.value)}
-                        >
-                            {years.length === 0 && <option value="">—</option>}
-                            {years.map((y) => (
-                                <option key={y} value={String(y)}>
-                                    {y}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="ad-report-actions">
+                        <form className="ad-report-filters" onSubmit={apply}>
+                            <label>
+                                Course
+                                <select
+                                    className="ad-select"
+                                    value={selected.course}
+                                    onChange={(e) =>
+                                        setSelected({
+                                            ...selected,
+                                            course: e.target.value,
+                                        })
+                                    }
+                                >
+                                    <option value="">All</option>
+                                    {options.courses.map((code) => (
+                                        <option key={code} value={code}>
+                                            {code}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label>
+                                Year graduated
+                                <select
+                                    className="ad-select"
+                                    value={selected.year}
+                                    onChange={(e) =>
+                                        setSelected({
+                                            ...selected,
+                                            year: e.target.value,
+                                        })
+                                    }
+                                >
+                                    <option value="">All</option>
+                                    {options.years.map((y) => (
+                                        <option key={y} value={String(y)}>
+                                            {y}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <button
+                                type="submit"
+                                className="ad-btn ad-btn-solid"
+                            >
+                                Apply
+                            </button>
+                        </form>
+
+                        <a href={exportUrl} className="ad-btn">
+                            <Download size={14} aria-hidden /> Export CSV
+                        </a>
                         <button
-                            type="submit"
-                            className="ad-btn ad-btn-solid"
-                            style={{ height: 36, padding: '0 22px' }}
+                            type="button"
+                            className="ad-btn"
+                            onClick={() => window.print()}
                         >
-                            Generate
+                            <Printer size={14} aria-hidden /> Print
                         </button>
-                    </form>
+                    </div>
                 }
             >
-                <div className="ad-reports">
-                    <section className="ad-card ad-report-card">
-                        <h2 className="ad-card-title">Employment Status</h2>
+                <p className="ad-report-scope">
+                    Showing: <strong>{scope}</strong>
+                    <span className="ad-print-only">
+                        {' '}
+                        · Printed {new Date().toLocaleDateString()}
+                    </span>
+                </p>
 
-                        <div className="ad-donut">
-                            <div className="ad-donut-wrap">
-                                <svg
-                                    viewBox="0 0 142 142"
-                                    width="142"
-                                    height="142"
-                                    role="img"
-                                    aria-label="Employment status chart"
-                                >
-                                    <circle
-                                        cx="71"
-                                        cy="71"
-                                        r={RADIUS}
-                                        fill="none"
-                                        stroke="var(--ad-bar-track)"
-                                        strokeWidth="24"
-                                        opacity={counted === 0 ? 0.5 : 0}
+                <div className="ad-report-grid">
+                    <ReportSection title="Employment" />
+
+                    {/* 1 */}
+                    <ChartCard
+                        title="Employment Status"
+                        note="Everyone with a known status."
+                        empty={status.total === 0}
+                    >
+                        <BigStat
+                            value={`${status.rate.percent}%`}
+                            caption={`employment rate (${status.rate.count} of ${status.total} employed or self-employed)`}
+                        />
+                        <Donut
+                            data={status}
+                            centerValue={String(status.total)}
+                            centerLabel="Graduates"
+                        />
+                    </ChartCard>
+
+                    {/* 2 */}
+                    <ChartCard
+                        title="Employment by Course"
+                        empty={byCourse.length === 0}
+                    >
+                        <StackedBars rows={byCourse} />
+                    </ChartCard>
+
+                    {/* 3 */}
+                    <ChartCard
+                        title="Employment Rate by Year Graduated"
+                        note="Percent employed or self-employed (employed / total)."
+                        empty={byYear.length === 0}
+                    >
+                        <YearColumns points={byYear} />
+                    </ChartCard>
+
+                    {/* 4 */}
+                    <ChartCard
+                        title="Is the Job Related to the Course?"
+                        note="Survey respondents with a job (first or current job)."
+                        empty={related.overall.total === 0}
+                    >
+                        <BigStat
+                            value={`${related.overall.items[0]?.percent ?? 0}%`}
+                            caption={`say their job is related (${related.overall.items[0]?.count ?? 0} of ${related.overall.total})`}
+                        />
+                        <StackedBars rows={related.courses} />
+                    </ChartCard>
+
+                    {/* 5 */}
+                    <ChartCard
+                        title="Time to Land the First Job"
+                        note="Respondents whose current job is their first job."
+                        empty={timeToLand.total === 0}
+                    >
+                        <BarList items={timeToLand.items} />
+                    </ChartCard>
+
+                    <ReportSection title="Jobs, Pay and Skills" />
+
+                    {/* 6 */}
+                    <ChartCard
+                        title="Sector and Place of Work"
+                        note="Respondents who are presently employed."
+                        empty={sector.sector.total === 0}
+                    >
+                        <BarList items={sector.sector.items} />
+                        <h3 className="ad-chart-sub">Local vs abroad</h3>
+                        <StackedBars
+                            rows={[{ label: 'Place of work', ...sector.place }]}
+                        />
+                    </ChartCard>
+
+                    {/* 7 */}
+                    <ChartCard
+                        title="First Job Earning"
+                        note="Monthly earning range of respondents on their first job. Grouped counts only."
+                        empty={earning.total === 0}
+                    >
+                        <BarList items={earning.items} />
+                    </ChartCard>
+
+                    {/* 8 */}
+                    <ChartCard
+                        title="How They Found Their First Job"
+                        note="Most common first."
+                        empty={howFound.total === 0}
+                    >
+                        <BarList items={howFound.items} />
+                    </ChartCard>
+
+                    {/* 9 */}
+                    <ChartCard
+                        title="Competencies Used on the Job"
+                        note={`Of ${competencies.total} respondent(s); each could pick more than one, so percentages add up to more than 100%.`}
+                        empty={competencies.total === 0}
+                    >
+                        <BarList items={competencies.items} />
+                    </ChartCard>
+
+                    {/* 10 */}
+                    <ChartCard
+                        title="Curriculum Relevance"
+                        note="Was the curriculum relevant to their first job?"
+                        empty={
+                            curriculum.relevant.total === 0 &&
+                            curriculum.suggestions.total === 0
+                        }
+                        wide
+                    >
+                        <div className="ad-report-split">
+                            <div>
+                                {curriculum.relevant.total > 0 ? (
+                                    <StackedBars
+                                        rows={[
+                                            {
+                                                label: 'Relevant to the first job',
+                                                ...curriculum.relevant,
+                                            },
+                                        ]}
                                     />
-                                    {counted > 0 &&
-                                        segments.map((segment) => {
-                                            const length =
-                                                (segment.count / counted) *
-                                                CIRCUMFERENCE;
-                                            const circle = (
-                                                <circle
-                                                    key={segment.label}
-                                                    cx="71"
-                                                    cy="71"
-                                                    r={RADIUS}
-                                                    fill="none"
-                                                    stroke={segment.color}
-                                                    strokeWidth="24"
-                                                    strokeDasharray={`${Math.max(length - 2, 0)} ${CIRCUMFERENCE}`}
-                                                    strokeDashoffset={-offset}
-                                                    transform="rotate(-90 71 71)"
-                                                />
-                                            );
-
-                                            offset += length;
-
-                                            return circle;
-                                        })}
-                                </svg>
-                                <div className="ad-donut-center">
-                                    <span className="ad-donut-total">
-                                        {employment.total}
-                                    </span>
-                                    <span className="ad-donut-label">
-                                        Graduates
-                                    </span>
-                                </div>
+                                ) : (
+                                    <p className="ad-chart-empty">
+                                        No data yet
+                                    </p>
+                                )}
                             </div>
-
-                            <ul className="ad-legend">
-                                {segments.map((segment) => (
-                                    <li key={segment.label}>
-                                        <i
-                                            style={{
-                                                background: segment.color,
-                                            }}
-                                        />
-                                        <span>{segment.label}</span>
-                                        <span className="ad-faint">
-                                            {segment.percent}%
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
+                            <TextList
+                                title="Latest curriculum suggestions"
+                                answers={curriculum.suggestions}
+                            />
                         </div>
-                    </section>
+                    </ChartCard>
 
-                    <section className="ad-card ad-report-card">
-                        <h2 className="ad-card-title">
-                            Top Employment Sectors
-                        </h2>
+                    <ReportSection title="Problems and Gaps" />
 
-                        <div className="ad-bars">
-                            {sectors.length === 0 && (
-                                <p
-                                    className="ad-empty"
-                                    style={{ padding: 0, textAlign: 'left' }}
-                                >
-                                    No sector data yet.
-                                </p>
-                            )}
+                    {/* 11 */}
+                    <ChartCard
+                        title="Reasons for Not Being Employed"
+                        note={`Of ${notEmployed.total} respondent(s) not employed; each could pick more than one.`}
+                        empty={notEmployed.total === 0}
+                    >
+                        <BarList items={notEmployed.items} />
+                    </ChartCard>
 
-                            {sectors.map((sector) => (
-                                <div key={sector.label} className="ad-bar-row">
-                                    <div className="ad-bar-head">
-                                        <span>{sector.label}</span>
-                                        <span className="ad-faint">
-                                            {sector.percent}%
-                                        </span>
-                                    </div>
-                                    <div className="ad-bar">
-                                        <i
-                                            style={{
-                                                width: `${sector.percent}%`,
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
+                    {/* 13 */}
+                    <ChartCard
+                        title="Why They Chose the Course"
+                        note={`Of ${courseReasons.total} respondent(s); each could pick more than one.`}
+                        empty={courseReasons.total === 0}
+                    >
+                        <BarList items={courseReasons.items} />
+                    </ChartCard>
+
+                    {/* 12 */}
+                    <ChartCard
+                        title="Help Needed in Landing a Job"
+                        note={`${helpNeeded.total} respondent(s) answered. Latest answers, without names.`}
+                        empty={helpNeeded.total === 0}
+                        wide
+                    >
+                        <TextList answers={helpNeeded} />
+                    </ChartCard>
+
+                    <ReportSection title="Survey Progress" />
+
+                    {/* 14 */}
+                    <ChartCard
+                        title="Response Funnel"
+                        note="Graduates added through Bulk Upload."
+                        empty={funnel.uploaded === 0}
+                        wide
+                    >
+                        <BigStat
+                            value={`${funnel.rate.percent}%`}
+                            caption={`response rate (${funnel.rate.count} of ${funnel.uploaded} answered)`}
+                        />
+                        <Funnel stages={funnel.stages} />
+
+                        <div className="ad-report-split">
+                            <div>
+                                <h3 className="ad-chart-sub">
+                                    Answered by course
+                                </h3>
+                                {funnel.answeredByCourse.length > 0 ? (
+                                    <BarList items={funnel.answeredByCourse} />
+                                ) : (
+                                    <p className="ad-chart-empty">
+                                        No data yet
+                                    </p>
+                                )}
+                            </div>
+                            <div>
+                                <h3 className="ad-chart-sub">
+                                    Answered by year graduated
+                                </h3>
+                                {funnel.answeredByYear.length > 0 ? (
+                                    <BarList items={funnel.answeredByYear} />
+                                ) : (
+                                    <p className="ad-chart-empty">
+                                        No data yet
+                                    </p>
+                                )}
+                            </div>
                         </div>
-                    </section>
+
+                        {funnel.unknown > 0 && (
+                            <p className="ad-chart-note">
+                                {funnel.unknown} uploaded graduate(s) have not
+                                answered yet, so their course and year are not
+                                known (Bulk Upload only has Student ID, Last
+                                Name and Email).
+                            </p>
+                        )}
+                    </ChartCard>
                 </div>
             </AdminLayout>
         </>

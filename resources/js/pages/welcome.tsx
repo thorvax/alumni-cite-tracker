@@ -1,8 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowRight, House, Info, MessageSquare } from 'lucide-react';
+import { ArrowRight, House, Info, LogIn, MessageSquare } from 'lucide-react';
 import { CiteLogo, CollegeCredit } from '@/components/cite-logo';
 import ThemeToggle from '@/components/survey/theme-toggle';
 import { stepUrl } from '@/lib/survey';
+import { privacy } from '@/routes';
+import { login } from '@/routes/alumni';
 
 // About and Contact pages don't exist yet; point these at real routes once they do.
 const navItems = [
@@ -69,15 +71,29 @@ export default function Welcome() {
                                 <span>Empower Tomorrow</span>
                             </h1>
 
-                            <Link
-                                href={stepUrl('general-information')}
-                                className="sv-cta"
-                            >
-                                Get Started
-                                <ArrowRight size={16} aria-hidden />
-                            </Link>
+                            <div className="sv-cta-row">
+                                <Link
+                                    href={stepUrl('general-information')}
+                                    className="sv-cta"
+                                >
+                                    Get Started
+                                    <ArrowRight size={16} aria-hidden />
+                                </Link>
+
+                                <Link
+                                    href={login()}
+                                    className="sv-cta sv-cta-ghost"
+                                >
+                                    <LogIn size={16} aria-hidden />
+                                    Alumni Login
+                                </Link>
+                            </div>
                         </div>
                     </div>
+
+                    <footer className="sv-landing-footer">
+                        <Link href={privacy()}>Privacy Policy</Link>
+                    </footer>
                 </main>
             </div>
         </>

@@ -17,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        // Not logged in: alumni pages and the survey go to the alumni login, everything else to the admin login.
+        $middleware->redirectGuestsTo(
+            fn (Request $request) => $request->routeIs('alumni.*', 'survey.*') ? route('alumni.login') : route('login'),
+        );
+
         $middleware->web(append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,

@@ -7,15 +7,33 @@ import type { GraduateRow, Paginated } from '@/lib/admin';
 
 type Props = {
     graduates: Paginated<GraduateRow>;
-    filters: { q: string };
+    filters: { q: string; per_page: number };
+    perPageOptions: number[];
 };
 
-export default function GraduatesIndex({ graduates, filters }: Props) {
+export default function GraduatesIndex({
+    graduates,
+    filters,
+    perPageOptions,
+}: Props) {
     const [q, setQ] = useState(filters.q);
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/graduates', q ? { q } : {}, { preserveState: true });
+        router.get(
+            '/graduates',
+            { ...(q ? { q } : {}), per_page: filters.per_page },
+            { preserveState: true },
+        );
+    };
+
+    // A new page size starts again at page 1.
+    const changePerPage = (perPage: string) => {
+        router.get(
+            '/graduates',
+            { ...(filters.q ? { q: filters.q } : {}), per_page: perPage },
+            { preserveScroll: true },
+        );
     };
 
     return (
@@ -98,10 +116,29 @@ export default function GraduatesIndex({ graduates, filters }: Props) {
                     </div>
 
                     <div className="ad-foot">
-                        <span>
-                            Showing {graduates.from ?? 0} to {graduates.to ?? 0}{' '}
-                            of {graduates.total} records
-                        </span>
+                        <div className="ad-foot-info">
+                            <label className="ad-perpage">
+                                Show
+                                <select
+                                    className="ad-select"
+                                    value={filters.per_page}
+                                    onChange={(e) =>
+                                        changePerPage(e.target.value)
+                                    }
+                                >
+                                    {perPageOptions.map((option) => (
+                                        <option key={option} value={option}>
+                                            {option}
+                                        </option>
+                                    ))}
+                                </select>
+                                per page
+                            </label>
+                            <span>
+                                Showing {graduates.from ?? 0} to{' '}
+                                {graduates.to ?? 0} of {graduates.total} records
+                            </span>
+                        </div>
                         {graduates.last_page > 1 && (
                             <Pagination
                                 current={graduates.current_page}
