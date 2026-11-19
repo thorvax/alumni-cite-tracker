@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AppSetting;
+use App\Services\UpdateReminderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -13,7 +14,7 @@ class SettingsController extends Controller
 {
     private const FLAGS = ['allow_registration', 'email_notifications', 'activity_logs'];
 
-    public function show(Request $request): Response
+    public function show(Request $request, UpdateReminderService $updates): Response
     {
         $user = $request->user('web');
 
@@ -26,7 +27,32 @@ class SettingsController extends Controller
             'system' => collect(self::FLAGS)
                 ->mapWithKeys(fn (string $flag) => [$flag => AppSetting::flag($flag)])
                 ->all(),
+            'updateReminders' => [
+                'enabled' => AppSetting::flag('update_reminder_enabled', false),
+                'months' => UpdateReminderService::months(),
+                'monthOptions' => UpdateReminderService::MONTH_OPTIONS,
+                'hour' => (int) AppSetting::value('reminder_hour', 8),
+                'due' => $updates->due()->count(),
+            ],
         ]);
+    }
+
+    /**
+     * "Please update your answers" emails: on/off and every 6 or 12 months.
+     */
+    public function updateReminders(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'enabled' => ['required', 'boolean'],
+            'months' => ['required', 'integer', Rule::in(UpdateReminderService::MONTH_OPTIONS)],
+        ], [
+            'months.in' => 'Choose every 6 or every 12 months.',
+        ]);
+
+        AppSetting::set('update_reminder_enabled', (bool) $data['enabled']);
+        AppSetting::set('update_reminder_months', (int) $data['months']);
+
+        return back();
     }
 
     public function updateAccount(Request $request): RedirectResponse

@@ -24,6 +24,7 @@ use Illuminate\Support\Str;
  * @property CarbonImmutable|null $survey_updated_at
  * @property CarbonImmutable|null $activated_at
  * @property CarbonImmutable|null $privacy_consented_at
+ * @property CarbonImmutable|null $last_update_reminder_at
  * @property string|null $password
  * @property array<string, array<string, mixed>>|null $survey Answers keyed by step slug.
  */
@@ -93,6 +94,7 @@ class Graduate extends Authenticatable
             'privacy_consented_at' => 'datetime',
             'password' => 'hashed',
             'is_demo' => 'boolean',
+            'last_update_reminder_at' => 'datetime',
         ];
     }
 

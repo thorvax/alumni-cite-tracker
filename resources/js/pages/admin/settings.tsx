@@ -14,7 +14,19 @@ type Props = {
         email_notifications: boolean;
         activity_logs: boolean;
     };
+    updateReminders: {
+        enabled: boolean;
+        months: number;
+        monthOptions: number[];
+        hour: number;
+        /** Alumni who would get a reminder at the next run. */
+        due: number;
+    };
 };
+
+/** 8 -> "8:00 AM", 13 -> "1:00 PM" */
+const hourLabel = (hour: number) =>
+    `${hour % 12 === 0 ? 12 : hour % 12}:00 ${hour < 12 ? 'AM' : 'PM'}`;
 
 const flags = [
     { key: 'allow_registration', label: 'Allow new record registration' },
@@ -22,7 +34,7 @@ const flags = [
     { key: 'activity_logs', label: 'Maintain activity logs' },
 ] as const;
 
-export default function Settings({ account, system }: Props) {
+export default function Settings({ account, system, updateReminders }: Props) {
     const accountForm = useForm({
         name: account.name ?? '',
         email: account.email ?? '',
@@ -30,6 +42,11 @@ export default function Settings({ account, system }: Props) {
     });
 
     const systemForm = useForm({ ...system });
+
+    const reminderForm = useForm({
+        enabled: updateReminders.enabled,
+        months: updateReminders.months,
+    });
 
     const saveAccount = (e: FormEvent) => {
         e.preventDefault();
@@ -39,6 +56,13 @@ export default function Settings({ account, system }: Props) {
     const saveSystem = (e: FormEvent) => {
         e.preventDefault();
         systemForm.patch('/settings/system', { preserveScroll: true });
+    };
+
+    const saveReminders = (e: FormEvent) => {
+        e.preventDefault();
+        reminderForm.patch('/settings/system/update-reminders', {
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -164,6 +188,95 @@ export default function Settings({ account, system }: Props) {
                                 disabled={systemForm.processing}
                             >
                                 Save Changes
+                            </button>
+                        </div>
+                    </form>
+
+                    <form
+                        className="ad-card"
+                        onSubmit={saveReminders}
+                        noValidate
+                    >
+                        <h2 className="ad-card-title">Update Reminders</h2>
+                        <p className="ad-sub" style={{ marginTop: 6 }}>
+                            Emails alumni who answered the survey and have not
+                            updated it for a while, so their data stays current.
+                            Sent daily at {hourLabel(updateReminders.hour)} (the
+                            time set for survey reminders on the Bulk Upload
+                            page).
+                        </p>
+
+                        <div className="ad-checks">
+                            <label className="ad-check">
+                                <input
+                                    type="checkbox"
+                                    checked={reminderForm.data.enabled}
+                                    onChange={(e) =>
+                                        reminderForm.setData(
+                                            'enabled',
+                                            e.target.checked,
+                                        )
+                                    }
+                                />
+                                Remind alumni to update their answers
+                            </label>
+                        </div>
+
+                        <div className="ad-grid-3" style={{ marginTop: 14 }}>
+                            <div>
+                                <label
+                                    className="ad-label"
+                                    htmlFor="update-months"
+                                >
+                                    Remind when the last update is older than
+                                </label>
+                                <select
+                                    id="update-months"
+                                    className="ad-select"
+                                    value={reminderForm.data.months}
+                                    onChange={(e) =>
+                                        reminderForm.setData(
+                                            'months',
+                                            Number(e.target.value),
+                                        )
+                                    }
+                                >
+                                    {updateReminders.monthOptions.map((m) => (
+                                        <option key={m} value={m}>
+                                            {m} months
+                                        </option>
+                                    ))}
+                                </select>
+                                {reminderForm.errors.months && (
+                                    <p className="ad-row-error" role="alert">
+                                        {reminderForm.errors.months}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <p className="ad-sub" style={{ marginTop: 14 }}>
+                            Due now (with the saved setting):{' '}
+                            <strong>{updateReminders.due}</strong> alumni. Each
+                            person gets at most one reminder per period.
+                        </p>
+
+                        <div className="ad-actions">
+                            {reminderForm.recentlySuccessful && (
+                                <span
+                                    className="ad-sub"
+                                    style={{ alignSelf: 'center' }}
+                                    role="status"
+                                >
+                                    Saved.
+                                </span>
+                            )}
+                            <button
+                                type="submit"
+                                className="ad-btn"
+                                disabled={reminderForm.processing}
+                            >
+                                Save Reminders
                             </button>
                         </div>
                     </form>

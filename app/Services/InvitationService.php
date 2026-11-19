@@ -47,6 +47,7 @@ class InvitationService
         $max = (int) AppSetting::value('reminder_max', 3);
 
         return Graduate::query()
+            ->where('is_demo', false) // never email the fake demo addresses
             ->invited()
             ->withEmail()
             ->whereNull('survey_completed_at')
