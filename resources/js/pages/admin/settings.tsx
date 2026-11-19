@@ -1,6 +1,9 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 import { AdField, AdInput } from '@/components/admin/controls';
+import WhoToRemind, {
+    type ReminderTarget,
+} from '@/components/admin/who-to-remind';
 import AdminLayout from '@/layouts/admin-layout';
 
 type Props = {
@@ -14,14 +17,23 @@ type Props = {
         email_notifications: boolean;
         activity_logs: boolean;
     };
+    /** Automatic update reminders (saved settings). */
     updateReminders: {
         enabled: boolean;
+        /** Remind every N months. */
         months: number;
+        /** all = everyone who answered; stale = not updated in the past staleMonths. */
+        target: ReminderTarget;
+        staleMonths: number;
         monthOptions: number[];
         hour: number;
         /** Alumni who would get a reminder at the next run. */
         due: number;
     };
+    /** Manual "Send now": how many each choice would email. */
+    manualCounts: { all: number; stale: Record<number, number> };
+    /** Message after "Send now". */
+    flash?: string | null;
 };
 
 /** 8 -> "8:00 AM", 13 -> "1:00 PM" */
@@ -34,7 +46,13 @@ const flags = [
     { key: 'activity_logs', label: 'Maintain activity logs' },
 ] as const;
 
-export default function Settings({ account, system, updateReminders }: Props) {
+export default function Settings({
+    account,
+    system,
+    updateReminders,
+    manualCounts,
+    flash,
+}: Props) {
     const accountForm = useForm({
         name: account.name ?? '',
         email: account.email ?? '',
@@ -46,7 +64,19 @@ export default function Settings({ account, system, updateReminders }: Props) {
     const reminderForm = useForm({
         enabled: updateReminders.enabled,
         months: updateReminders.months,
+        target: updateReminders.target,
+        stale_months: updateReminders.staleMonths,
     });
+
+    const manualForm = useForm({
+        target: 'stale' as ReminderTarget,
+        stale_months: updateReminders.staleMonths,
+    });
+
+    const manualCount =
+        manualForm.data.target === 'all'
+            ? manualCounts.all
+            : (manualCounts.stale[manualForm.data.stale_months] ?? 0);
 
     const saveAccount = (e: FormEvent) => {
         e.preventDefault();
@@ -56,6 +86,21 @@ export default function Settings({ account, system, updateReminders }: Props) {
     const saveSystem = (e: FormEvent) => {
         e.preventDefault();
         systemForm.patch('/settings/system', { preserveScroll: true });
+    };
+
+    // Manual: sends right away to the chosen group, even if automatic reminders are off.
+    const sendRemindersNow = (e: FormEvent) => {
+        e.preventDefault();
+
+        if (
+            window.confirm(
+                `Email an update reminder to ${manualCount} alumni now?`,
+            )
+        ) {
+            manualForm.post('/settings/system/update-reminders/send', {
+                preserveScroll: true,
+            });
+        }
     };
 
     const saveReminders = (e: FormEvent) => {
@@ -197,13 +242,15 @@ export default function Settings({ account, system, updateReminders }: Props) {
                         onSubmit={saveReminders}
                         noValidate
                     >
-                        <h2 className="ad-card-title">Update Reminders</h2>
+                        <h2 className="ad-card-title">
+                            Automatic Update Reminders
+                        </h2>
                         <p className="ad-sub" style={{ marginTop: 6 }}>
-                            Emails alumni who answered the survey and have not
-                            updated it for a while, so their data stays current.
-                            Sent daily at {hourLabel(updateReminders.hour)} (the
-                            time set for survey reminders on the Bulk Upload
-                            page).
+                            Emails alumni on a schedule so their data stays
+                            current. Sent daily at{' '}
+                            {hourLabel(updateReminders.hour)} (the time set for
+                            survey reminders on the Bulk Upload page). Each
+                            person gets at most one reminder per period.
                         </p>
 
                         <div className="ad-checks">
@@ -218,7 +265,7 @@ export default function Settings({ account, system, updateReminders }: Props) {
                                         )
                                     }
                                 />
-                                Remind alumni to update their answers
+                                Send update reminders automatically
                             </label>
                         </div>
 
@@ -228,7 +275,7 @@ export default function Settings({ account, system, updateReminders }: Props) {
                                     className="ad-label"
                                     htmlFor="update-months"
                                 >
-                                    Remind when the last update is older than
+                                    Remind every
                                 </label>
                                 <select
                                     id="update-months"
@@ -253,12 +300,33 @@ export default function Settings({ account, system, updateReminders }: Props) {
                                     </p>
                                 )}
                             </div>
+
+                            <div className="ad-span-2">
+                                <WhoToRemind
+                                    id="auto"
+                                    target={reminderForm.data.target}
+                                    staleMonths={reminderForm.data.stale_months}
+                                    monthOptions={updateReminders.monthOptions}
+                                    onChange={(patch) =>
+                                        reminderForm.setData((prev) => ({
+                                            ...prev,
+                                            ...patch,
+                                        }))
+                                    }
+                                    errors={reminderForm.errors}
+                                />
+                            </div>
                         </div>
 
                         <p className="ad-sub" style={{ marginTop: 14 }}>
-                            Due now (with the saved setting):{' '}
-                            <strong>{updateReminders.due}</strong> alumni. Each
-                            person gets at most one reminder per period.
+                            Due at the next run (with the saved settings):{' '}
+                            <strong>{updateReminders.due}</strong> alumni (
+                            <Link href="/graduates/reminders?list=due">
+                                see the list
+                            </Link>
+                            ). See who has updated and what changed on{' '}
+                            <Link href="/graduates/updates">Update Status</Link>
+                            .
                         </p>
 
                         <div className="ad-actions">
@@ -276,8 +344,68 @@ export default function Settings({ account, system, updateReminders }: Props) {
                                 className="ad-btn"
                                 disabled={reminderForm.processing}
                             >
-                                Save Reminders
+                                Save Automatic Reminders
                             </button>
+                        </div>
+                    </form>
+
+                    <form
+                        className="ad-card"
+                        onSubmit={sendRemindersNow}
+                        noValidate
+                    >
+                        <h2 className="ad-card-title">
+                            Send Update Reminders Now
+                        </h2>
+                        <p className="ad-sub" style={{ marginTop: 6 }}>
+                            Emails the chosen alumni right away, whether or not
+                            automatic reminders are on. Nothing here is saved.
+                        </p>
+
+                        <div style={{ marginTop: 14 }}>
+                            <WhoToRemind
+                                id="manual"
+                                target={manualForm.data.target}
+                                staleMonths={manualForm.data.stale_months}
+                                monthOptions={updateReminders.monthOptions}
+                                onChange={(patch) =>
+                                    manualForm.setData((prev) => ({
+                                        ...prev,
+                                        ...patch,
+                                    }))
+                                }
+                                errors={manualForm.errors}
+                            />
+                        </div>
+
+                        <div
+                            className="ad-actions"
+                            style={{ justifyContent: 'flex-start' }}
+                        >
+                            <button
+                                type="submit"
+                                className="ad-btn ad-btn-solid"
+                                disabled={
+                                    manualCount === 0 || manualForm.processing
+                                }
+                            >
+                                Send now to {manualCount} alumni
+                            </button>
+                            <Link
+                                href={`/graduates/reminders?list=manual&target=${manualForm.data.target}&stale_months=${manualForm.data.stale_months}`}
+                                className="ad-btn"
+                            >
+                                See who
+                            </Link>
+                            {flash && (
+                                <span
+                                    className="ad-sub"
+                                    style={{ alignSelf: 'center' }}
+                                    role="status"
+                                >
+                                    {flash}
+                                </span>
+                            )}
                         </div>
                     </form>
                 </div>

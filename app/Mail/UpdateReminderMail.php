@@ -27,8 +27,13 @@ class UpdateReminderMail extends Mailable
             text: 'emails.update-reminder-text',
             with: [
                 'name' => $this->graduate->last_name ?? $this->graduate->full_name,
-                // The personal link opens the login (or activation, if not done yet).
-                'link' => route('survey.invite', ['token' => $this->graduate->invite_token]),
+                // Main button: the alumni login page (then My Survey > Update my answers).
+                'link' => route('alumni.login'),
+                // Only for graduates who answered before accounts existed and never
+                // activated one: they need their personal link to create it first.
+                'activateLink' => ! $this->graduate->isActivated() && $this->graduate->invite_token !== null
+                    ? route('survey.invite', ['token' => $this->graduate->invite_token])
+                    : null,
                 'lastUpdated' => $last?->format('F j, Y'),
             ],
         );

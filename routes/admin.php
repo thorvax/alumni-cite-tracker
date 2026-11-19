@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GraduateController;
+use App\Http\Controllers\GraduateHistoryController;
 use App\Http\Controllers\GraduateImportController;
+use App\Http\Controllers\GraduateRemindersController;
+use App\Http\Controllers\GraduateUpdatesController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
@@ -26,8 +29,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('{graduate}/email', 'saveEmail')->name('.email');
     });
 
+    // Declared before the resource so "updates" is not read as a graduate id.
+    Route::get('graduates/updates', GraduateUpdatesController::class)->name('graduates.updates');
+    Route::get('graduates/reminders', GraduateRemindersController::class)->name('graduates.reminders');
+
     Route::resource('graduates', GraduateController::class)
         ->except(['destroy']);
+    Route::post('graduates/{graduate}/update-reminder', [GraduateController::class, 'sendUpdateReminder'])
+        ->name('graduates.update-reminder');
+    Route::get('graduates/{graduate}/history', GraduateHistoryController::class)->name('graduates.history');
 
     Route::get('search', SearchController::class)->name('search');
     Route::get('reports', [ReportController::class, 'index'])->name('reports');
@@ -37,4 +47,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('settings/system/account', [SettingsController::class, 'updateAccount'])->name('admin.settings.account');
     Route::patch('settings/system', [SettingsController::class, 'updateSystem'])->name('admin.settings.system');
     Route::patch('settings/system/update-reminders', [SettingsController::class, 'updateReminders'])->name('admin.settings.update-reminders');
+    Route::post('settings/system/update-reminders/send', [SettingsController::class, 'sendUpdateReminders'])->name('admin.settings.update-reminders.send');
 });

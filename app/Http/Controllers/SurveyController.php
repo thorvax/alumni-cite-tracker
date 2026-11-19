@@ -194,6 +194,7 @@ class SurveyController extends Controller
         }
 
         $response = SurveyResponse::create([
+            'graduate_id' => $graduate->id, // for the graduate's update history
             'data' => $answers,
             'submitted_at' => now(),
         ]);
