@@ -1076,3 +1076,15 @@ a.sv-step {
         padding: 0 24px 20px;
     }
 }
+
+/* ---------- survey letter (before step A) ---------- */
+.sv-intro-start {
+    gap: 8px;
+    margin-top: 8px;
+}
+.sv-intro-heading {
+    margin: 10px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--sv-text);
+}

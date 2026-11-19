@@ -60,7 +60,9 @@ function loginGraduate(array $attributes = []): Graduate
     $graduate = Graduate::factory()->invited()->create($attributes);
     $graduate->forceFill(['password' => 'Secret123', 'activated_at' => now()])->save();
 
-    test()->actingAs($graduate, 'graduate');
+    // Logged in, and already agreed to the Data Privacy Notice on the letter page.
+    test()->actingAs($graduate, 'graduate')
+        ->withSession(['survey.consented_at' => now()->toIso8601String()]);
 
     return $graduate;
 }

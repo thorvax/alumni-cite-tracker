@@ -263,6 +263,7 @@ it('prefills the survey for a logged-in graduate and updates the same record on 
     $this->get('/survey/start/'.$graduate->invite_token)->assertRedirect('/alumni/activate');
 
     $this->actingAs($graduate, 'graduate')
+        ->withSession(['survey.consented_at' => now()->toIso8601String()]) // agreed on the letter page
         ->get('/survey/general-information')
         ->assertInertia(fn (Assert $page) => $page
             ->where('draft.last_name', 'Cruz')

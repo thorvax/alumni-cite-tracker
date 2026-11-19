@@ -8,7 +8,6 @@ import {
     SelectInput,
     TextInput,
 } from '@/components/survey/form-controls';
-import PrivacyConsent from '@/components/survey/privacy-consent';
 import SurveyLayout, { SURVEY_FORM_ID } from '@/layouts/survey-layout';
 import { stepUrl, withDefaults } from '@/lib/survey';
 import { civilStatuses, regions } from '@/lib/survey-options';
@@ -28,7 +27,6 @@ type Data = {
     house_no: string;
     mobile_primary: string;
     mobile_secondary: string;
-    privacy: boolean;
 };
 
 const defaults: Data = {
@@ -46,7 +44,6 @@ const defaults: Data = {
     house_no: '',
     mobile_primary: '',
     mobile_secondary: '',
-    privacy: false,
 };
 
 export default function GeneralInformation({
@@ -313,13 +310,6 @@ export default function GeneralInformation({
                             }
                         />
                     </Field>
-
-                    <PrivacyConsent
-                        className="sv-col-span"
-                        checked={data.privacy}
-                        onChange={(checked) => setData('privacy', checked)}
-                        error={errors.privacy}
-                    />
                 </form>
             </SurveyLayout>
         </>

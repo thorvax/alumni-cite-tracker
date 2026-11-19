@@ -14,7 +14,9 @@ Route::prefix('survey')->name('survey.')->group(function () {
     // The survey itself needs the alumni login, so every answer belongs to one
     // uploaded graduate and submitting again updates that same record.
     Route::controller(SurveyController::class)->middleware('auth:graduate')->group(function () {
+        // The letter + Data Privacy Notice; ticking "I agree" opens the steps.
         Route::get('/', 'start')->name('start');
+        Route::post('/', 'consent')->name('consent');
 
         Route::get('{step}', 'show')
             ->whereIn('step', SurveyController::STEPS)

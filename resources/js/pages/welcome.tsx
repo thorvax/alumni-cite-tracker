@@ -2,9 +2,9 @@ import { Head, Link } from '@inertiajs/react';
 import { ArrowRight, House, Info, LogIn, MessageSquare } from 'lucide-react';
 import { CiteLogo, CollegeCredit } from '@/components/cite-logo';
 import ThemeToggle from '@/components/survey/theme-toggle';
-import { stepUrl } from '@/lib/survey';
 import { privacy } from '@/routes';
 import { login } from '@/routes/alumni';
+import { start as surveyStart } from '@/routes/survey';
 
 // About and Contact pages don't exist yet; point these at real routes once they do.
 const navItems = [
@@ -72,10 +72,7 @@ export default function Welcome() {
                             </h1>
 
                             <div className="sv-cta-row">
-                                <Link
-                                    href={stepUrl('general-information')}
-                                    className="sv-cta"
-                                >
+                                <Link href={surveyStart()} className="sv-cta">
                                     Get Started
                                     <ArrowRight size={16} aria-hidden />
                                 </Link>
@@ -92,7 +89,7 @@ export default function Welcome() {
                     </div>
 
                     <footer className="sv-landing-footer">
-                        <Link href={privacy()}>Privacy Policy</Link>
+                        <Link href={privacy()}>Data Privacy Notice</Link>
                     </footer>
                 </main>
             </div>

@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import AlumniLayout from '@/layouts/alumni-layout';
-import { stepUrl } from '@/lib/survey';
 import { edit } from '@/routes/alumni/survey';
+import { start as surveyStart } from '@/routes/survey';
 
 type Props = {
     graduate: {
@@ -87,7 +87,7 @@ export default function MySurvey({ graduate, status }: Props) {
 
                     {!graduate.answered && (
                         <Link
-                            href={stepUrl('general-information')}
+                            href={surveyStart()}
                             className="sv-btn sv-btn-primary"
                         >
                             Answer the survey
