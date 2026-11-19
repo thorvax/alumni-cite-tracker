@@ -15,7 +15,7 @@ class SettingsController extends Controller
 
     public function show(Request $request): Response
     {
-        $user = $request->user();
+        $user = $request->user('web');
 
         return Inertia::render('admin/settings', [
             'account' => [
@@ -31,7 +31,7 @@ class SettingsController extends Controller
 
     public function updateAccount(Request $request): RedirectResponse
     {
-        $user = $request->user();
+        $user = $request->user('web');
 
         abort_if($user === null, 403);
 
