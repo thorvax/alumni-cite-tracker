@@ -123,20 +123,20 @@ it('saves the update reminder settings from the admin Settings page', function (
         ->and(UpdateReminderService::months())->toBe(12);
 
     $this->actingAs($admin)
-        ->patch('/settings/system/update-reminders', ['enabled' => true, 'months' => 3])
-        ->assertSessionHasErrors(['months' => 'Choose every 6 or every 12 months.']);
+        ->patch('/settings/system/update-reminders', ['enabled' => true, 'months' => 5])
+        ->assertSessionHasErrors(['months' => 'Choose every 3, 6, 9 or 12 months.']);
 });
 
-it('sends update reminders to everyone due from the Settings button, even when switched off', function () {
+it('sends update reminders now to alumni who have not updated, even when automatic reminders are off', function () {
     Queue::fake();
     AppSetting::set('update_reminder_enabled', false);
     AppSetting::set('reminder_hour', ((int) now()->format('G') + 5) % 24); // not the chosen hour
     answeredOn(now()->subYear());
     answeredOn(now()->subYear());
-    answeredOn(now()->subMonth()); // not due
+    answeredOn(now()->subMonth()); // updated within 6 months: not included
 
     $this->actingAs(User::factory()->create())
-        ->post('/settings/system/update-reminders/send')
+        ->post('/settings/system/update-reminders/send', ['target' => 'stale', 'stale_months' => 6])
         ->assertRedirect()
         ->assertSessionHas('status', 'Queued 2 update reminder(s).');
 

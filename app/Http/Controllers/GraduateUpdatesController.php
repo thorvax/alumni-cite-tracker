@@ -40,7 +40,7 @@ class GraduateUpdatesController extends Controller
             return to_route('graduates.updates', [...$request->query(), 'page' => $page->lastPage()]);
         }
 
-        $cutoff = now()->subMonths(UpdateReminderService::months());
+        $cutoff = now()->subMonths(UpdateReminderService::staleMonths());
 
         return Inertia::render('admin/graduates/updates', [
             'graduates' => $page->through(function (Graduate $graduate) use ($cutoff) {
@@ -61,7 +61,7 @@ class GraduateUpdatesController extends Controller
             }),
             'filters' => ['status' => $filter ?? '', 'per_page' => $perPage],
             'perPageOptions' => GraduateController::PER_PAGE_OPTIONS,
-            'months' => UpdateReminderService::months(),
+            'months' => UpdateReminderService::staleMonths(),
             'counts' => [
                 'all' => $this->filtered(null)->count(),
                 ...collect(self::FILTERS)->mapWithKeys(fn (string $f) => [$f => $this->filtered($f)->count()])->all(),

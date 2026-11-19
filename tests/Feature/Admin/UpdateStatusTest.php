@@ -1,9 +1,11 @@
 <?php
 
+use App\Jobs\SendUpdateReminder;
 use App\Models\AppSetting;
 use App\Models\Graduate;
 use App\Models\User;
 use App\Services\UpdateReminderService;
+use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -59,13 +61,91 @@ it('records the changed parts when a graduate updates, and nothing on the first 
 it('reminds only alumni who have not updated, or everyone who answered', function () {
     $stale = respondentOn(now()->subYear());
     $recent = respondentOn(now()->subYear(), ['survey_updated_at' => now()->subMonth()]);
-    respondentOn(now()->subMonth()); // answered recently: first reminder waits one period
+    $justAnswered = respondentOn(now()->subWeek());
 
     AppSetting::set('update_reminder_target', 'stale');
     expect((new UpdateReminderService)->due()->pluck('id')->all())->toBe([$stale->id]);
 
+    // "All who answered" includes people who answered recently.
     AppSetting::set('update_reminder_target', 'all');
-    expect((new UpdateReminderService)->due()->pluck('id')->sort()->values()->all())->toBe([$stale->id, $recent->id]);
+    expect((new UpdateReminderService)->due()->pluck('id')->sort()->values()->all())
+        ->toBe([$stale->id, $recent->id, $justAnswered->id]);
+});
+
+it('uses the chosen 3, 6, 9 or 12 months for "not updated", apart from how often to remind', function (int $months, int $expected) {
+    AppSetting::set('update_reminder_target', 'stale');
+    AppSetting::set('update_reminder_months', 12); // remind every 12 months
+    AppSetting::set('update_reminder_stale_months', $months);
+
+    respondentOn(now()->subMonths(4));
+    respondentOn(now()->subMonths(7));
+    respondentOn(now()->subMonths(10));
+
+    expect((new UpdateReminderService)->due()->count())->toBe($expected);
+})->with([
+    [3, 3],
+    [6, 2],
+    [9, 1],
+    [12, 0],
+]);
+
+it('does not remind again within the "remind every" period', function () {
+    AppSetting::set('update_reminder_target', 'all');
+    AppSetting::set('update_reminder_months', 3);
+    respondentOn(now()->subYear(), ['last_update_reminder_at' => now()->subMonths(2)]);
+    $due = respondentOn(now()->subYear(), ['last_update_reminder_at' => now()->subMonths(4)]);
+
+    expect((new UpdateReminderService)->due()->pluck('id')->all())->toBe([$due->id]);
+});
+
+it('saves the automatic reminder settings', function () {
+    $this->actingAs($this->admin)
+        ->patch('/settings/system/update-reminders', ['enabled' => true, 'months' => 3, 'target' => 'stale', 'stale_months' => 9])
+        ->assertSessionHasNoErrors();
+
+    expect(UpdateReminderService::months())->toBe(3)
+        ->and(UpdateReminderService::staleMonths())->toBe(9);
+
+    $this->actingAs($this->admin)
+        ->get('/settings/system')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('updateReminders.months', 3)
+            ->where('updateReminders.staleMonths', 9)
+            ->where('updateReminders.monthOptions', [3, 6, 9, 12]));
+});
+
+it('shows how many alumni each manual choice would email', function () {
+    respondentOn(now()->subYear());
+    respondentOn(now()->subMonths(4));
+    respondentOn(now()->subWeek());
+
+    $this->actingAs($this->admin)
+        ->get('/settings/system')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('manualCounts.all', 3)
+            ->where('manualCounts.stale', ['3' => 2, '6' => 1, '9' => 1, '12' => 1]));
+});
+
+it('sends update reminders now to everyone who answered, even recently', function () {
+    Queue::fake();
+    respondentOn(now()->subYear());
+    respondentOn(now()->subWeek());
+
+    $this->actingAs($this->admin)
+        ->post('/settings/system/update-reminders/send', ['target' => 'all'])
+        ->assertSessionHas('status', 'Queued 2 update reminder(s).');
+
+    Queue::assertPushed(SendUpdateReminder::class, 2);
+});
+
+it('checks the manual send choices', function () {
+    $this->actingAs($this->admin)
+        ->post('/settings/system/update-reminders/send', ['target' => 'stale'])
+        ->assertSessionHasErrors(['stale_months' => 'Choose how many months without an update.']);
+
+    $this->actingAs($this->admin)
+        ->post('/settings/system/update-reminders/send', ['target' => 'someone'])
+        ->assertSessionHasErrors(['target' => 'Choose who to remind.']);
 });
 
 it('saves who to remind from the Settings page', function () {

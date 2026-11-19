@@ -27,31 +27,46 @@ class SettingsController extends Controller
             'system' => collect(self::FLAGS)
                 ->mapWithKeys(fn (string $flag) => [$flag => AppSetting::flag($flag)])
                 ->all(),
+            // Automatic reminders (saved, sent daily by the scheduler).
             'updateReminders' => [
                 'enabled' => AppSetting::flag('update_reminder_enabled', false),
                 'months' => UpdateReminderService::months(),
-                'monthOptions' => UpdateReminderService::MONTH_OPTIONS,
                 'target' => UpdateReminderService::target(),
+                'staleMonths' => UpdateReminderService::staleMonths(),
+                'monthOptions' => UpdateReminderService::MONTH_OPTIONS,
                 'hour' => (int) AppSetting::value('reminder_hour', 8),
                 'due' => $updates->due()->count(),
+            ],
+            // Manual "Send now": how many each choice would email.
+            'manualCounts' => [
+                'all' => $updates->audience(UpdateReminderService::TARGET_ALL, 0)->count(),
+                'stale' => collect(UpdateReminderService::MONTH_OPTIONS)
+                    ->mapWithKeys(fn (int $m) => [$m => $updates->audience(UpdateReminderService::TARGET_STALE, $m)->count()])
+                    ->all(),
             ],
             'flash' => $request->session()->get('status'),
         ]);
     }
 
     /**
-     * "Send update reminders now": everyone who is due, even when the automatic
-     * reminders are off or it is not the chosen hour.
+     * Manual "Send update reminders now": everyone who answered (even recently),
+     * or only those who have not updated in the past N months. Sent at once,
+     * whether or not the automatic reminders are on.
      */
-    public function sendUpdateReminders(UpdateReminderService $updates): RedirectResponse
+    public function sendUpdateReminders(Request $request, UpdateReminderService $updates): RedirectResponse
     {
-        $count = $updates->queueDue();
+        $data = $request->validate([
+            'target' => ['required', Rule::in(UpdateReminderService::TARGETS)],
+            'stale_months' => ['required_if:target,'.UpdateReminderService::TARGET_STALE, 'nullable', 'integer', Rule::in(UpdateReminderService::MONTH_OPTIONS)],
+        ], $this->reminderMessages());
+
+        $count = $updates->queueAll($updates->audience($data['target'], (int) ($data['stale_months'] ?? 0)));
 
         return back()->with('status', "Queued {$count} update reminder(s).");
     }
 
     /**
-     * "Please update your answers" emails: on/off and every 6 or 12 months.
+     * Automatic update reminders: on/off, remind every N months, and who.
      */
     public function updateReminders(Request $request): RedirectResponse
     {
@@ -59,18 +74,34 @@ class SettingsController extends Controller
             'enabled' => ['required', 'boolean'],
             'months' => ['required', 'integer', Rule::in(UpdateReminderService::MONTH_OPTIONS)],
             'target' => ['sometimes', 'required', Rule::in(UpdateReminderService::TARGETS)],
-        ], [
-            'months.in' => 'Choose every 6 or every 12 months.',
-            'target.in' => 'Choose who to remind.',
-        ]);
+            'stale_months' => ['sometimes', 'required', 'integer', Rule::in(UpdateReminderService::MONTH_OPTIONS)],
+        ], $this->reminderMessages());
 
         AppSetting::set('update_reminder_enabled', (bool) $data['enabled']);
         AppSetting::set('update_reminder_months', (int) $data['months']);
+
         if (isset($data['target'])) {
             AppSetting::set('update_reminder_target', $data['target']);
         }
 
+        if (isset($data['stale_months'])) {
+            AppSetting::set('update_reminder_stale_months', (int) $data['stale_months']);
+        }
+
         return back();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function reminderMessages(): array
+    {
+        return [
+            'months.in' => 'Choose every 3, 6, 9 or 12 months.',
+            'target.in' => 'Choose who to remind.',
+            'stale_months.in' => 'Choose 3, 6, 9 or 12 months.',
+            'stale_months.required_if' => 'Choose how many months without an update.',
+        ];
     }
 
     public function updateAccount(Request $request): RedirectResponse

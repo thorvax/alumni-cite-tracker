@@ -10,16 +10,19 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * "Please update your answers" emails, so graduate data stays current.
  *
- * Settings (admin Settings page):
- *  - update_reminder_enabled: automatic reminders on/off (off by default)
- *  - update_reminder_months: every 6 or 12 months
- *  - update_reminder_target: "stale" = only alumni who have not updated in that
- *    time, "all" = every alumni who answered, once per period
- * Sent by `cite:send-reminders` at the same hour as the survey reminders.
+ * Automatic (admin Settings, sent by `cite:send-reminders` at the survey
+ * reminder hour):
+ *  - update_reminder_enabled: on/off (off by default)
+ *  - update_reminder_months: remind every 3, 6, 9 or 12 months
+ *  - update_reminder_target: "all" = everyone who answered (even recently),
+ *    "stale" = only alumni who have not updated in the past N months
+ *  - update_reminder_stale_months: that N (3, 6, 9 or 12)
+ *
+ * Manual ("Send update reminders now"): the same two "who" choices, sent at once.
  */
 class UpdateReminderService
 {
-    public const MONTH_OPTIONS = [6, 12];
+    public const MONTH_OPTIONS = [3, 6, 9, 12];
 
     public const TARGET_STALE = 'stale';
 
@@ -27,13 +30,13 @@ class UpdateReminderService
 
     public const TARGETS = [self::TARGET_STALE, self::TARGET_ALL];
 
+    /** Automatic: remind every N months. */
     public static function months(): int
     {
-        $months = (int) AppSetting::value('update_reminder_months', 6);
-
-        return in_array($months, self::MONTH_OPTIONS, true) ? $months : 6;
+        return self::option((int) AppSetting::value('update_reminder_months', 6), 6);
     }
 
+    /** Automatic: who to remind. */
     public static function target(): string
     {
         $target = AppSetting::value('update_reminder_target', self::TARGET_STALE);
@@ -42,8 +45,35 @@ class UpdateReminderService
     }
 
     /**
-     * Who gets a reminder now: can be reminded, was not reminded within the
-     * period, and (for "stale") has not updated within the period either.
+     * "Not updated in the past N months" (automatic setting). Also decides
+     * "Up to date" / "Needs update" on the Update Status page.
+     */
+    public static function staleMonths(): int
+    {
+        return self::option((int) AppSetting::value('update_reminder_stale_months', self::months()), self::months());
+    }
+
+    private static function option(int $months, int $fallback): int
+    {
+        return in_array($months, self::MONTH_OPTIONS, true) ? $months : $fallback;
+    }
+
+    /**
+     * Who a reminder is for: everyone who can be reminded ("all", even if they
+     * answered recently), or only those who have not updated in $staleMonths.
+     *
+     * @return Builder<Graduate>
+     */
+    public function audience(string $target, int $staleMonths): Builder
+    {
+        $query = $this->remindable();
+
+        return $target === self::TARGET_ALL ? $query : self::needsUpdate($query, $staleMonths);
+    }
+
+    /**
+     * Automatic reminders due now: the chosen audience, minus anyone already
+     * reminded within the "remind every" period.
      *
      * @return Builder<Graduate>
      */
@@ -51,13 +81,10 @@ class UpdateReminderService
     {
         $cutoff = now()->subMonths(self::months());
 
-        $query = $this->remindable()
+        return $this->audience(self::target(), self::staleMonths())
             ->where(fn (Builder $q) => $q
-                ->where('last_update_reminder_at', '<=', $cutoff)
-                // Never reminded: wait one period after they first answered.
-                ->orWhere(fn (Builder $q) => $q->whereNull('last_update_reminder_at')->where('survey_completed_at', '<=', $cutoff)));
-
-        return self::target() === self::TARGET_ALL ? $query : self::needsUpdate($query);
+                ->whereNull('last_update_reminder_at')
+                ->orWhere('last_update_reminder_at', '<=', $cutoff));
     }
 
     /**
@@ -75,14 +102,14 @@ class UpdateReminderService
     }
 
     /**
-     * Last answer (update, or first submit) is older than the period.
+     * Last answer (update, or first submit) is older than $months (default: staleMonths()).
      *
      * @param  Builder<Graduate>  $query
      * @return Builder<Graduate>
      */
-    public static function needsUpdate(Builder $query): Builder
+    public static function needsUpdate(Builder $query, ?int $months = null): Builder
     {
-        $cutoff = now()->subMonths(self::months());
+        $cutoff = now()->subMonths($months ?? self::staleMonths());
 
         return $query->where(fn (Builder $q) => $q
             ->where('survey_updated_at', '<=', $cutoff)
@@ -90,29 +117,37 @@ class UpdateReminderService
     }
 
     /**
-     * Last answer is within the period.
+     * Last answer is within $months (default: staleMonths()).
      *
      * @param  Builder<Graduate>  $query
      * @return Builder<Graduate>
      */
-    public static function upToDate(Builder $query): Builder
+    public static function upToDate(Builder $query, ?int $months = null): Builder
     {
-        $cutoff = now()->subMonths(self::months());
+        $cutoff = now()->subMonths($months ?? self::staleMonths());
 
         return $query->where(fn (Builder $q) => $q
             ->where('survey_updated_at', '>', $cutoff)
             ->orWhere(fn (Builder $q) => $q->whereNull('survey_updated_at')->where('survey_completed_at', '>', $cutoff)));
     }
 
-    /**
-     * Queues one email per graduate who is due. The reminder time is saved
-     * right away so the next hourly run never queues the same person twice.
-     */
+    /** Automatic: queues everyone due now. */
     public function queueDue(): int
+    {
+        return $this->queueAll($this->due());
+    }
+
+    /**
+     * Queues one email per graduate in the group, a few seconds apart. The
+     * reminder time is saved right away, so nobody is queued twice.
+     *
+     * @param  Builder<Graduate>  $group
+     */
+    public function queueAll(Builder $group): int
     {
         $count = 0;
 
-        $this->due()->each(function (Graduate $graduate) use (&$count) {
+        $group->each(function (Graduate $graduate) use (&$count) {
             $this->queue($graduate, $count * InvitationService::STAGGER_SECONDS);
             $count++;
         });
