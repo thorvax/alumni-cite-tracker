@@ -9,3 +9,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('cite:send-reminders')->hourly();
+
+// Scheduled announcements go out within 15 minutes of their time.
+Schedule::command('cite:publish-announcements')->everyFifteenMinutes()->withoutOverlapping();

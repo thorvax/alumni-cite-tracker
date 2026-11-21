@@ -19,7 +19,7 @@ it('tells the landing page a logged-in graduate has not answered yet (button: St
 
     $this->get('/')
         ->assertInertia(fn (Assert $page) => $page
-            ->where('alumni', ['last_name' => 'Dela Cruz', 'answered' => false]));
+            ->where('alumni', ['last_name' => 'Dela Cruz', 'answered' => false, 'unread_announcements' => 0]));
 });
 
 it('tells the landing page a logged-in graduate already answered (button: Go to My Survey)', function () {
@@ -28,8 +28,8 @@ it('tells the landing page a logged-in graduate already answered (button: Go to 
 
     $this->post('/alumni/login', ['student_id' => $graduate->student_id, 'password' => 'Secret123']);
 
-    // Only the last name and "answered" are shared, no other personal data.
+    // Only the last name, "answered" and the unread count are shared, no other personal data.
     $this->get('/')
         ->assertInertia(fn (Assert $page) => $page
-            ->where('alumni', ['last_name' => 'Dela Cruz', 'answered' => true]));
+            ->where('alumni', ['last_name' => 'Dela Cruz', 'answered' => true, 'unread_announcements' => 0]));
 });

@@ -109,6 +109,28 @@ class Graduate extends Authenticatable
         return $this->hasMany(GraduateLoginCode::class);
     }
 
+    /**
+     * Announcements sent to this graduate (email status and read time).
+     *
+     * @return HasMany<AnnouncementRecipient, $this>
+     */
+    public function announcementRecipients(): HasMany
+    {
+        return $this->hasMany(AnnouncementRecipient::class);
+    }
+
+    /**
+     * Announcements sent to this graduate that they have not opened yet
+     * (and that are still showing), for the badge in the alumni menu.
+     */
+    public function unreadAnnouncementCount(): int
+    {
+        return Announcement::query()
+            ->showingNow()
+            ->whereHas('recipients', fn (Builder $q) => $q->where('graduate_id', $this->id)->whereNull('read_at'))
+            ->count();
+    }
+
     public function isActivated(): bool
     {
         return $this->activated_at !== null;

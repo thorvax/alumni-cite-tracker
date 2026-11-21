@@ -1,5 +1,11 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ArrowRight, House, Info, MessageSquare } from 'lucide-react';
+import {
+    ArrowRight,
+    House,
+    Info,
+    Megaphone,
+    MessageSquare,
+} from 'lucide-react';
 import { CiteLogo, CollegeCredit } from '@/components/cite-logo';
 import ThemeToggle from '@/components/survey/theme-toggle';
 import { privacy } from '@/routes';
@@ -10,6 +16,12 @@ import { start as surveyStart } from '@/routes/survey';
 // About and Contact pages don't exist yet; point these at real routes once they do.
 const navItems = [
     { label: 'Home', href: '/', icon: House, active: true },
+    {
+        label: 'Announcements',
+        href: '/announcements',
+        icon: Megaphone,
+        active: false,
+    },
     { label: 'About', href: '#about', icon: Info, active: false },
     { label: 'Contact', href: '#contact', icon: MessageSquare, active: false },
 ];
@@ -123,6 +135,8 @@ export default function Welcome() {
                     </div>
 
                     <footer className="sv-landing-footer">
+                        {/* Also here because the sidebar is hidden on phones. */}
+                        <Link href="/announcements">Announcements</Link> ·{' '}
                         <Link href={privacy()}>Data Privacy Notice</Link>
                     </footer>
                 </main>
