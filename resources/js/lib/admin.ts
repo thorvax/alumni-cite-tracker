@@ -1,5 +1,6 @@
 export type GraduateRow = {
     id: number;
+    student_id: string | null;
     name: string;
     course: string | null;
     year: number | null;

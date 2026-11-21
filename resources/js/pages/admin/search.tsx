@@ -62,7 +62,7 @@ export default function SearchGraduates({
                     <AdInput
                         type="search"
                         aria-label="Search by name or course"
-                        placeholder="Search name, course, year, or status..."
+                        placeholder="Search name, student ID, course, year, or status..."
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
                     />

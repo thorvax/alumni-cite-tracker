@@ -96,6 +96,38 @@ it('lists, paginates and searches graduates', function () {
             ->where('graduates.data.0.name', 'Juan Dela Cruz'));
 });
 
+it('shows the Student ID Number in the graduates list', function () {
+    Graduate::factory()->create(['student_id' => '20244012', 'full_name' => 'Juan Dela Cruz']);
+    Graduate::factory()->create(['student_id' => null, 'full_name' => 'Added By Hand']);
+
+    $this->actingAs($this->admin)
+        ->get('/graduates')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('graduates.data', fn ($rows) => collect($rows)->pluck('student_id', 'name')->all() === [
+                'Added By Hand' => null,
+                'Juan Dela Cruz' => '20244012',
+            ]));
+});
+
+it('searches graduates by Student ID Number, whole or part', function (string $term, int $expected) {
+    Graduate::factory()->create(['student_id' => '20244012', 'full_name' => 'Juan Dela Cruz']);
+    Graduate::factory()->create(['student_id' => '20244013', 'full_name' => 'Maria Santos']);
+    Graduate::factory()->create(['student_id' => '20190001', 'full_name' => 'Pedro Reyes']);
+
+    $this->actingAs($this->admin)
+        ->get('/graduates?q='.$term)
+        ->assertInertia(fn (Assert $page) => $page->where('graduates.total', $expected));
+
+    // The Search page uses the same search.
+    $this->actingAs($this->admin)
+        ->get('/search?q='.$term)
+        ->assertInertia(fn (Assert $page) => $page->where('results.total', $expected));
+})->with([
+    'whole ID' => ['20244012', 1],
+    'first digits' => ['202440', 2],
+    'last digits' => ['0001', 1],
+]);
+
 it('shows 5, 10, 25, 50 or 100 graduates per page', function (int $perPage, int $shown) {
     Graduate::factory()->count(30)->create();
 

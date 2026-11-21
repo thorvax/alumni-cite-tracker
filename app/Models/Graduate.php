@@ -150,12 +150,13 @@ class Graduate extends Authenticatable
     }
 
     /**
-     * @return array{id: int, name: string, course: string|null, year: int|null, status: string|null}
+     * @return array{id: int, student_id: string|null, name: string, course: string|null, year: int|null, status: string|null}
      */
     public function toRow(): array
     {
         return [
             'id' => $this->id,
+            'student_id' => $this->student_id,
             'name' => $this->full_name,
             'course' => $this->courseCode(),
             'year' => $this->year_graduated,
@@ -244,7 +245,7 @@ class Graduate extends Authenticatable
     }
 
     /**
-     * Matches the name, course (full name or code like BSIT), year or status.
+     * Matches the name, Student ID Number, course (full name or code like BSIT), year or status.
      *
      * @param  Builder<Graduate>  $query
      * @return Builder<Graduate>
@@ -266,6 +267,7 @@ class Graduate extends Authenticatable
 
         return $query->where(function (Builder $q) use ($like, $courses) {
             $q->where('full_name', 'like', $like)
+                ->orWhere('student_id', 'like', $like)
                 ->orWhere('course', 'like', $like)
                 ->orWhere('employment_status', 'like', $like)
                 ->orWhere('year_graduated', 'like', $like)

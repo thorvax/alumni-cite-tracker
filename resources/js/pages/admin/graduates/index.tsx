@@ -53,7 +53,7 @@ export default function GraduatesIndex({
                             className="ad-input"
                             type="search"
                             aria-label="Search graduates"
-                            placeholder="Search name, course, year, or status..."
+                            placeholder="Search name, student ID, course, year, or status..."
                             value={q}
                             onChange={(e) => setQ(e.target.value)}
                         />
@@ -76,12 +76,13 @@ export default function GraduatesIndex({
                         className="ad-table"
                         style={{
                             ['--cols' as string]:
-                                '56px 1.4fr 1fr 0.8fr 1.4fr 70px',
+                                '56px 110px 1.4fr 1fr 0.8fr 1.4fr 70px',
                             padding: '8px 4px 0',
                         }}
                     >
                         <div className="ad-tr ad-th">
                             <span>#</span>
+                            <span>Student ID</span>
                             <span>Name</span>
                             <span>Course</span>
                             <span>Year</span>
@@ -97,6 +98,15 @@ export default function GraduatesIndex({
                             <div key={graduate.id} className="ad-tr">
                                 <span className="ad-faint">
                                     {(graduates.from ?? 1) + i}
+                                </span>
+                                <span
+                                    className={
+                                        graduate.student_id
+                                            ? undefined
+                                            : 'ad-faint'
+                                    }
+                                >
+                                    {graduate.student_id ?? '—'}
                                 </span>
                                 <span>{graduate.name}</span>
                                 <span>{graduate.course ?? '—'}</span>
