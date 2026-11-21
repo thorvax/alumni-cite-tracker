@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GraduateController;
 use App\Http\Controllers\GraduateHistoryController;
@@ -47,6 +48,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('graduates/{graduate}/update-reminder', [GraduateController::class, 'sendUpdateReminder'])
         ->name('graduates.update-reminder');
     Route::get('graduates/{graduate}/history', GraduateHistoryController::class)->name('graduates.history');
+
+    // Events and announcements (admin side). Under /admin because /announcements is the
+    // public page. "preview" is declared before the resource so it is not read as an id.
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::post('announcements/preview', [AnnouncementController::class, 'preview'])->name('announcements.preview');
+        Route::resource('announcements', AnnouncementController::class);
+        Route::post('announcements/{announcement}/send', [AnnouncementController::class, 'send'])->name('announcements.send');
+        Route::post('announcements/{announcement}/resend-failed', [AnnouncementController::class, 'resendFailed'])->name('announcements.resend-failed');
+        Route::post('announcements/{announcement}/recipients/{recipient}/resend', [AnnouncementController::class, 'resend'])
+            ->scopeBindings()
+            ->name('announcements.resend');
+    });
 
     Route::get('search', SearchController::class)->name('search');
     Route::get('reports', [ReportController::class, 'index'])->name('reports');

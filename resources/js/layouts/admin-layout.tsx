@@ -6,6 +6,7 @@ import {
     House,
     LogOut,
     Mail,
+    Megaphone,
     Settings,
     Upload,
     Users,
@@ -39,6 +40,12 @@ const nav = [
         label: 'Update Status',
         href: '/graduates/updates',
         icon: ClipboardCheck,
+    },
+    {
+        key: 'announcements',
+        label: 'Announcements',
+        href: '/admin/announcements',
+        icon: Megaphone,
     },
     { key: 'reports', label: 'Reports', href: '/reports', icon: FileText },
     {

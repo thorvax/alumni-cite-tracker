@@ -47,7 +47,9 @@ class HandleInertiaRequests extends Middleware
             ],
             // The logged-in graduate (alumni login): the Log out button and the
             // landing page button ("Start the survey" or "Go to My Survey").
-            'alumni' => $this->alumni($request),
+            // A closure, so it is worked out after the page ran (opening an
+            // announcement first marks it read, then the unread count is taken).
+            'alumni' => fn () => $this->alumni($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
@@ -55,7 +57,7 @@ class HandleInertiaRequests extends Middleware
     /**
      * Only what the pages need about the logged-in graduate (no other personal data).
      *
-     * @return array{last_name: string|null, answered: bool}|null
+     * @return array{last_name: string|null, answered: bool, unread_announcements: int}|null
      */
     private function alumni(Request $request): ?array
     {
@@ -68,6 +70,7 @@ class HandleInertiaRequests extends Middleware
         return [
             'last_name' => $graduate->last_name,
             'answered' => $graduate->survey_completed_at !== null,
+            'unread_announcements' => $graduate->unreadAnnouncementCount(),
         ];
     }
 }

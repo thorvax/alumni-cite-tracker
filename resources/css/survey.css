@@ -1139,3 +1139,139 @@ a.sv-step {
     outline: 2px solid var(--sv-hero-fg);
     outline-offset: 2px;
 }
+
+/* ---------- announcements (alumni + public pages) ---------- */
+.sv-alumni-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 40px 14px 0 12px;
+}
+.sv-alumni-nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: var(--sv-step-fg, var(--sv-text));
+    text-decoration: none;
+}
+.sv-alumni-nav a[aria-current='page'] {
+    background: var(--sv-active-bg);
+    border-color: var(--sv-active-border);
+    font-weight: 700;
+    color: var(--sv-text);
+}
+.sv-alumni-nav a:focus-visible {
+    outline: 2px solid var(--sv-text);
+    outline-offset: 2px;
+}
+.sv-alumni-count {
+    margin-left: auto;
+    min-width: 20px;
+    padding: 1px 6px;
+    background: var(--sv-primary-bg);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--sv-primary-fg);
+}
+.sv-ann-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.sv-ann-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    background: var(--sv-surface);
+    border: 1px solid var(--sv-card-border);
+    border-radius: 8px;
+    color: var(--sv-text);
+    text-decoration: none;
+}
+.sv-ann-item:hover {
+    border-color: var(--sv-active-border);
+}
+.sv-ann-item:focus-visible {
+    outline: 2px solid var(--sv-text);
+    outline-offset: 2px;
+}
+.sv-ann-item[data-unread='true'] .sv-ann-title {
+    font-weight: 700;
+}
+.sv-ann-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 12px;
+    color: var(--sv-muted);
+}
+.sv-ann-type {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.sv-ann-dot {
+    width: 9px;
+    height: 9px;
+    background: var(--sv-text);
+    border-radius: 999px;
+}
+.sv-ann-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+.sv-ann-event {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-size: 12.5px;
+    color: var(--sv-text);
+}
+.sv-ann-event span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.sv-ann-excerpt {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--sv-muted);
+    overflow-wrap: anywhere;
+}
+.sv-ann-when {
+    padding: 14px 16px;
+    background: var(--sv-surface);
+    border: 1px solid var(--sv-card-border);
+    border-radius: 8px;
+}
+.sv-ann-body {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    color: var(--sv-text);
+}
+@media (max-width: 767px) {
+    .sv-alumni-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        margin: 12px 12px 0;
+    }
+}

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Alumni\ActivationController;
+use App\Http\Controllers\Alumni\AnnouncementController;
 use App\Http\Controllers\Alumni\EditSurveyController;
 use App\Http\Controllers\Alumni\ForgotPasswordController;
 use App\Http\Controllers\Alumni\LoginController;
@@ -47,5 +48,9 @@ Route::prefix('alumni')->name('alumni.')->group(function () {
     Route::middleware('auth:graduate')->group(function () {
         Route::get('my-survey', MySurveyController::class)->name('my-survey');
         Route::post('my-survey/edit', EditSurveyController::class)->name('survey.edit');
+
+        // Public announcements plus the ones sent to this graduate (404 for anything else).
+        Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+        Route::get('announcements/{announcement}', [AnnouncementController::class, 'show'])->name('announcements.show');
     });
 });
