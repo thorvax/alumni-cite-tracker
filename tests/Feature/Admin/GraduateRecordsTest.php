@@ -29,6 +29,8 @@ function graduateForm(array $records = []): array
 
 it('saves course, year and status from the Add Graduate form', function () {
     $this->actingAs($this->admin)->post('/graduates', graduateForm([
+        'student_id' => '20244012',
+        'last_name' => 'Dela Cruz',
         'course' => 'Bachelor of Science in Information and Technology',
         'year_graduated' => '2024',
         'employment_status' => 'Self-employed',
@@ -38,8 +40,18 @@ it('saves course, year and status from the Add Graduate form', function () {
 
     expect($graduate->courseCode())->toBe('BSIT')
         ->and($graduate->year_graduated)->toBe(2024)
-        ->and($graduate->employment_status)->toBe('Self-employed')
-        ->and($graduate->invite_token)->toBeNull(); // no Student ID: no survey link
+        ->and($graduate->employment_status)->toBe('Self-employed');
+});
+
+it('requires a Student ID Number and Last Name for every graduate', function () {
+    $this->actingAs($this->admin)
+        ->post('/graduates', graduateForm())
+        ->assertSessionHasErrors([
+            'student_id' => 'Student ID Number is required.',
+            'last_name' => 'Last Name is required (the graduate uses it with the Student ID Number to activate their account).',
+        ]);
+
+    expect(Graduate::count())->toBe(0);
 });
 
 it('gives a graduate with a Student ID a survey link and emails it', function () {
@@ -103,8 +115,8 @@ it('checks the Student ID, Last Name, course and year', function () {
         ->assertSessionHasErrors(['student_id' => 'Another graduate already has this Student ID Number.']);
 });
 
-it('gives an older graduate a survey link when a Student ID is added on edit', function () {
-    $graduate = Graduate::factory()->create(['student_id' => null]);
+it('gives an older graduate without a survey link one when saved on edit', function () {
+    $graduate = Graduate::factory()->create(['student_id' => '20244012', 'invite_token' => null]);
 
     $this->actingAs($this->admin)
         ->get("/graduates/{$graduate->id}/edit")
