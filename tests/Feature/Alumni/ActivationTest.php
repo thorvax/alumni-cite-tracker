@@ -88,6 +88,20 @@ it('rejects a wrong code', function () {
     $this->get('/alumni/set-password')->assertRedirect('/alumni/verify-code');
 });
 
+it('keeps the expiry time when a wrong code is typed', function () {
+    $code = startActivation($this);
+    $expiresAt = GraduateLoginCode::sole()->expires_at;
+
+    $this->travel(5)->minutes();
+    $this->post('/alumni/verify-code', ['code' => $code === '111111' ? '222222' : '111111']);
+
+    expect(GraduateLoginCode::sole()->expires_at->equalTo($expiresAt))->toBeTrue();
+
+    // Still 10 minutes from when it was sent, not from the wrong try.
+    $this->travel(6)->minutes();
+    $this->post('/alumni/verify-code', ['code' => $code])->assertSessionHasErrors('code');
+});
+
 it('rejects an expired code', function () {
     $code = startActivation($this);
     $this->travel(11)->minutes();
