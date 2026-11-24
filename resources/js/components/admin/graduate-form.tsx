@@ -210,13 +210,14 @@ export default function GraduateForm({
             <p className="ad-note" style={{ margin: '0 0 18px' }}>
                 {hasLink
                     ? 'This graduate already has a personal survey link (see Graduates > Bulk Upload).'
-                    : 'With a Student ID Number the graduate gets a personal survey link, so they can create an alumni account and answer the survey.'}
+                    : 'The Student ID Number identifies the graduate and gives them a personal survey link, so they can create an alumni account and answer the survey.'}
             </p>
 
             <div className="ad-grid-2">
                 <AdField
                     id="student_id"
                     label="Student ID Number"
+                    required
                     error={errors.student_id}
                 >
                     <AdInput
@@ -234,7 +235,7 @@ export default function GraduateForm({
                 <AdField
                     id="last_name"
                     label="Last Name"
-                    required={data.student_id !== ''}
+                    required
                     error={errors.last_name}
                 >
                     <AdInput
@@ -302,8 +303,7 @@ export default function GraduateForm({
                             onChange({ send_invite: e.target.checked })
                         }
                     />
-                    Email the survey link now (needs a Student ID Number and an
-                    email address)
+                    Email the survey link now (needs an email address)
                 </label>
             )}
 

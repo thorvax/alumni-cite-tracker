@@ -98,13 +98,13 @@ it('lists, paginates and searches graduates', function () {
 
 it('shows the Student ID Number in the graduates list', function () {
     Graduate::factory()->create(['student_id' => '20244012', 'full_name' => 'Juan Dela Cruz']);
-    Graduate::factory()->create(['student_id' => null, 'full_name' => 'Added By Hand']);
+    Graduate::factory()->create(['student_id' => '20190001', 'full_name' => 'Added By Hand']);
 
     $this->actingAs($this->admin)
         ->get('/graduates')
         ->assertInertia(fn (Assert $page) => $page
-            ->where('graduates.data', fn ($rows) => collect($rows)->pluck('student_id', 'name')->all() === [
-                'Added By Hand' => null,
+            ->where('graduates.data', fn ($rows) => collect($rows)->pluck('student_id', 'name')->sortKeys()->all() === [
+                'Added By Hand' => '20190001',
                 'Juan Dela Cruz' => '20244012',
             ]));
 });
@@ -194,6 +194,8 @@ it('finds graduates by course code and filters by year and status', function () 
 it('adds a graduate', function () {
     $this->actingAs($this->admin)
         ->post('/graduates', [
+            'student_id' => '20244012',
+            'last_name' => 'Santos',
             'full_name' => 'Maria Santos',
             'birth_date' => '2001-01-15',
             'gender' => 'Female',
@@ -211,7 +213,7 @@ it('adds a graduate', function () {
 it('validates the add graduate form', function () {
     $this->actingAs($this->admin)
         ->post('/graduates', [])
-        ->assertSessionHasErrors(['full_name', 'birth_date', 'gender', 'civil_status', 'region', 'province', 'city']);
+        ->assertSessionHasErrors(['student_id', 'last_name', 'full_name', 'birth_date', 'gender', 'civil_status', 'region', 'province', 'city']);
 });
 
 it('updates a graduate', function () {
@@ -219,6 +221,8 @@ it('updates a graduate', function () {
 
     $this->actingAs($this->admin)
         ->patch("/graduates/{$graduate->id}", [
+            'student_id' => $graduate->student_id,
+            'last_name' => $graduate->last_name,
             'full_name' => 'Updated Name',
             'birth_date' => '2000-02-02',
             'gender' => 'Male',

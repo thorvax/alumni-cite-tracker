@@ -141,7 +141,7 @@ class Graduate extends Authenticatable
     {
         $normalize = fn (string $name) => Str::lower(Str::squish($name));
 
-        return $this->last_name !== null && $normalize($typed) === $normalize($this->last_name);
+        return $normalize($typed) === $normalize($this->last_name);
     }
 
     /**
@@ -172,7 +172,7 @@ class Graduate extends Authenticatable
     }
 
     /**
-     * @return array{id: int, student_id: string|null, name: string, course: string|null, year: int|null, status: string|null}
+     * @return array{id: int, student_id: string, name: string, course: string|null, year: int|null, status: string|null}
      */
     public function toRow(): array
     {

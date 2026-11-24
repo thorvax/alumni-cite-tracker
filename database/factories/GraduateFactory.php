@@ -28,8 +28,12 @@ class GraduateFactory extends Factory
             default => 'Further Studies',
         };
 
+        $lastName = fake()->lastName();
+
         return [
-            'full_name' => fake()->firstName().' '.fake()->lastName(),
+            'student_id' => fake()->unique()->numerify('20######'),
+            'last_name' => $lastName,
+            'full_name' => fake()->firstName().' '.$lastName,
             'birth_date' => fake()->dateTimeBetween('-30 years', '-21 years')->format('Y-m-d'),
             'gender' => fake()->randomElement(['Male', 'Female']),
             'civil_status' => fake()->randomElement(['Single', 'Single', 'Married']),
