@@ -98,6 +98,7 @@ it('saves a draft without sending anything', function () {
 
 it('sends now: queues emails 2 seconds apart, skips people without email, never includes demo graduates', function () {
     Queue::fake();
+    $this->freezeTime(); // so a slow run cannot shift the measured delays
     $first = Graduate::factory()->invited()->create();
     $second = Graduate::factory()->invited()->create();
     $noEmail = Graduate::factory()->notAnswered()->create(['email' => null]);
